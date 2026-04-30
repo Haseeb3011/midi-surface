@@ -1,0 +1,22 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Default permissions for MIDI Surface — core window controls + shell:open for the loopMIDI download link.",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "core:window:allow-set-fullscreen",
+    "core:window:allow-is-fullscreen",
+    "core:window:allow-minimize",
+    "core:window:allow-close",
+    "core:window:allow-start-dragging",
+    {
+      "identifier": "shell:allow-open",
+      "allow": [
+        { "url": "https://www.tobias-erichsen.de/**" },
+        { "url": "https://**.tobias-erichsen.de/**" },
+        { "url": "https://brave.com/**" }
+      ]
+    }
+  ]
+}
