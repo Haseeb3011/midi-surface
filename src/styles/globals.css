@@ -1,0 +1,207 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    /* Block all native gesture interpretation; per-control elements opt back in
+       to pointer events explicitly. */
+    touch-action: none;
+    overscroll-behavior: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background: rgb(var(--bg));
+    color: rgb(var(--text));
+    font-family: theme('fontFamily.sans');
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow: hidden;
+  }
+
+  /* Allow text selection inside inputs / editable fields only. */
+  input,
+  textarea,
+  [contenteditable='true'] {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  /* Native focus rings replaced with our accent ring. */
+  :focus {
+    outline: none;
+  }
+  :focus-visible {
+    outline: 2px solid rgb(var(--accent));
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+
+  /* Scrollbar polish (only shows if a scrollable region opts-in). */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgb(var(--border));
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgb(var(--muted));
+  }
+}
+
+@layer components {
+  /*
+    Activity-driven background. Phase 4 mutates --activity (0..1) to morph hue and
+    intensity in response to MIDI events. Stub gradient lives here so Phase 0 has
+    something visible.
+  */
+  .app-shell {
+    position: relative;
+    isolation: isolate;
+    background:
+      radial-gradient(
+        1200px 800px at 20% 10%,
+        rgb(var(--accent) / calc(0.18 + var(--activity) * 0.25)) 0%,
+        transparent 60%
+      ),
+      radial-gradient(
+        900px 700px at 90% 90%,
+        rgb(var(--accent-2) / calc(0.14 + var(--activity) * 0.2)) 0%,
+        transparent 60%
+      ),
+      rgb(var(--bg));
+    transition: background 600ms ease-out;
+  }
+
+  .glass {
+    background: linear-gradient(
+      180deg,
+      rgb(var(--surface-hi) / 0.7),
+      rgb(var(--surface) / 0.7)
+    );
+    border: 1px solid rgb(var(--border) / 0.6);
+    backdrop-filter: blur(10px) saturate(140%);
+    -webkit-backdrop-filter: blur(10px) saturate(140%);
+    border-radius: 14px;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.04),
+      0 12px 40px rgb(0 0 0 / 0.45);
+  }
+
+  .glow-accent {
+    box-shadow:
+      0 0 0 1px rgb(var(--accent) / 0.45),
+      0 0 24px rgb(var(--accent) / 0.5),
+      0 0 64px rgb(var(--accent-2) / 0.25);
+  }
+
+  /*
+    Pad visuals — same imperative pattern as piano keys. Press handler toggles
+    [data-active='1'] and writes --pad-glow; this CSS picks up the rest.
+    `aspect-ratio` keeps the pad square at any container width.
+  */
+  .pad-cell {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    user-select: none;
+    border-radius: 12px;
+    border: 1px solid rgb(var(--border) / 0.6);
+    background: rgb(var(--surface));
+    transition: transform 75ms ease-out, box-shadow 75ms ease-out;
+    --pad-hue: 270;
+    --pad-glow: 0.25;
+    cursor: pointer;
+    touch-action: none;
+  }
+  .pad-cell:active {
+    transform: scale(0.97);
+  }
+  .pad-cell[data-active='1'] {
+    box-shadow: 0 0 24px hsl(var(--pad-hue) 90% 60% / var(--pad-glow));
+  }
+  .pad-cell-bg {
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+    pointer-events: none;
+    opacity: 0.55;
+    transition: opacity 120ms ease-out;
+    background: radial-gradient(
+      circle at 50% 50%,
+      hsl(var(--pad-hue) 90% 60% / calc(0.18 + var(--pad-glow) * 0.55)) 0%,
+      transparent 70%
+    );
+  }
+  .pad-cell[data-active='1'] .pad-cell-bg {
+    opacity: 1;
+  }
+  .pad-cell-label {
+    position: absolute;
+    inset-inline: 0;
+    bottom: 4px;
+    text-align: center;
+    font-family: ui-monospace, monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgb(var(--text) / 0.7);
+    pointer-events: none;
+  }
+
+  /*
+    Piano key visuals — driven via [data-active] so the JS hot path can toggle
+    a single attribute on key press / release without ever re-rendering React.
+    Layout-only inline styles (left, width, height) stay on the element; the
+    visual state is fully CSS.
+  */
+  .piano-key-white {
+    position: absolute;
+    top: 0;
+    background: rgb(var(--text) / 0.95);
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+    border-left: 1px solid rgb(var(--border) / 0.4);
+    box-shadow: inset 0 -6px 10px rgb(0 0 0 / 0.15);
+    transition: background 60ms ease-out;
+    will-change: background, box-shadow;
+  }
+  .piano-key-white[data-active='1'] {
+    background: rgb(var(--accent) / 0.4);
+    box-shadow:
+      0 0 24px rgb(var(--accent) / 0.7),
+      inset 0 -8px 12px rgb(var(--accent) / 0.35);
+  }
+  .piano-key-black {
+    position: absolute;
+    top: 0;
+    background: linear-gradient(180deg, #1d1d2c 0%, #0a0a14 100%);
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+    border: 1px solid rgb(var(--border) / 0.8);
+    box-shadow: inset 0 -6px 10px rgb(0 0 0 / 0.6);
+    transition: background 60ms ease-out;
+    will-change: background, box-shadow;
+  }
+  .piano-key-black[data-active='1'] {
+    background: linear-gradient(180deg, rgb(var(--accent)) 0%, rgb(var(--accent-2)) 100%);
+    box-shadow: 0 0 18px rgb(var(--accent) / 0.7);
+  }
+}

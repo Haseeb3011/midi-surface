@@ -1,0 +1,49 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# build outputs
+dist/
+dist-ssr/
+dev-dist/
+build/
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+*.log
+
+# editor / OS
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+
+# env
+.env
+.env.local
+.env.*.local
+
+# coverage / test
+coverage/
+.nyc_output/
+
+# vite cache
+.vite/
+
+# Tauri / Rust
+src-tauri/target/
+src-tauri/gen/schemas/
+*.tsbuildinfo
+
+# build artifacts (cargo target lives here because of the path-with-spaces issue)
+# Note: this path is on C:\, outside the repo, but if anyone happens to have
+# `target/` inside the project root we don't want it tracked either.
+target/

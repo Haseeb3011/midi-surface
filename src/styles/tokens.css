@@ -1,0 +1,44 @@
+/*
+  Theme tokens. Live-tunable via the Theme Editor (Phase 4) by mutating CSS custom
+  properties on :root. Values are RGB triplets so Tailwind's `<alpha-value>` syntax
+  works (see tailwind.config.ts).
+*/
+
+:root {
+  /* Surfaces (dark base, Vital-inspired) */
+  --bg: 10 10 20;
+  --surface: 18 18 32;
+  --surface-hi: 28 28 46;
+  --border: 60 58 92;
+  --muted: 130 130 160;
+  --text: 235 235 245;
+
+  /* Dynamic accents — drive the activity-reactive gradient.
+     dynamicAccent.ts (Phase 4) will mutate these in real time. */
+  --accent: 124 92 255;       /* violet */
+  --accent-2: 255 92 182;     /* magenta */
+
+  /* Status */
+  --warn: 255 165 60;
+  --ok: 80 220 140;
+
+  /* Hue rotation seed used by activity-driven background animation */
+  --activity: 0;
+}
+
+/* Future themes can be applied by setting [data-theme="..."] on <html>.
+   Listed here as placeholders for the Theme Editor to flip. */
+[data-theme='cyber'] {
+  --accent: 0 240 255;
+  --accent-2: 255 80 180;
+}
+
+[data-theme='sunset'] {
+  --accent: 255 120 60;
+  --accent-2: 255 60 140;
+}
+
+[data-theme='mono'] {
+  --accent: 220 220 235;
+  --accent-2: 160 160 180;
+}
