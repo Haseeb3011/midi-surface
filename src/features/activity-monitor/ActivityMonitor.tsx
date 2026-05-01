@@ -63,7 +63,7 @@ function describe(e: MonitorRecord): string {
 export const ActivityMonitor = memo(function ActivityMonitor({
   onClose,
 }: {
-  onClose: () => void;
+  onClose?: () => void;
 }) {
   const [filter, setFilter] = useState<Filter>('all');
 
@@ -139,13 +139,15 @@ export const ActivityMonitor = memo(function ActivityMonitor({
         >
           clear
         </button>
-        <button
-          type="button"
-          onClick={onClose}
-          className="rounded-md bg-surfaceHi/40 px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-muted hover:text-text"
-        >
-          close
-        </button>
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-md bg-surfaceHi/40 px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-muted hover:text-text"
+          >
+            close
+          </button>
+        )}
       </div>
       <div className="flex-1 overflow-auto px-2 py-1 font-mono text-[11px] leading-tight">
         {visible.length === 0 ? (
