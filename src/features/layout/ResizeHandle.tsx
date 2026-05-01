@@ -11,7 +11,7 @@ import { useRef, useCallback } from 'react';
 import { useLayoutStore } from '@/store/layoutStore';
 import type { ModuleInstance, ModuleType } from './types';
 
-const MIN_COLSPAN: Record<ModuleType, 1 | 2 | 4> = {
+const MIN_COLSPAN: Record<ModuleType, 1 | 2 | 3 | 4> = {
   transport: 2,
   knobs:     2,
   faders:    2,
@@ -21,9 +21,9 @@ const MIN_COLSPAN: Record<ModuleType, 1 | 2 | 4> = {
   activity:  1,
 };
 
-function snapColSpan(raw: number, type: ModuleType): 1 | 2 | 4 {
+function snapColSpan(raw: number, type: ModuleType): 1 | 2 | 3 | 4 {
   const min = MIN_COLSPAN[type];
-  const valid = ([1, 2, 4] as const).filter((v) => v >= min);
+  const valid = ([1, 2, 3, 4] as const).filter((v) => v >= min);
   let best = valid[0]!;
   let bestDist = Math.abs(raw - best);
   for (const v of valid) {

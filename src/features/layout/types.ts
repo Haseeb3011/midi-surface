@@ -40,7 +40,7 @@ export interface ModuleOverrides {
 export interface ModuleInstance {
   id: string;
   type: ModuleType;
-  colSpan: 1 | 2 | 4;
+  colSpan: 1 | 2 | 3 | 4;
   overrides?: ModuleOverrides;
 }
 
