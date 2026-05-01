@@ -28,10 +28,11 @@ let seeded = false;
 export async function initDB(): Promise<void> {
   if (seeded) return;
   seeded = true;
+  // Always overwrite built-ins so layout changes in templates.ts propagate
+  // to existing users on next cold start. User layouts are untouched.
   await db.transaction('rw', db.layouts, async () => {
     for (const layout of BUILT_IN_LAYOUTS) {
-      const existing = await db.layouts.get(layout.id);
-      if (!existing) await db.layouts.put(layout);
+      await db.layouts.put(layout);
     }
   });
 }

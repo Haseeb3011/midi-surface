@@ -29,7 +29,7 @@ interface LayoutState {
   setActivePage: (index: number) => void;
   toggleEditMode: () => void;
   reorderModules: (pageId: string, fromIndex: number, toIndex: number) => void;
-  setModuleColSpan: (pageId: string, moduleId: string, colSpan: 1 | 2 | 4) => void;
+  setModuleColSpan: (pageId: string, moduleId: string, colSpan: 1 | 2 | 3 | 4) => void;
   addModule: (pageId: string, module: ModuleInstance) => void;
   removeModule: (pageId: string, moduleId: string) => void;
   setControlOverride: (
