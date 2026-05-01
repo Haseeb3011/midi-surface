@@ -5,7 +5,8 @@
   produced by the Pad primitive. Bank switching changes the underlying note range
   for all 16 pads at once.
 
-  Each bank gets its own hue family so the grid visually shifts when you switch.
+  When a moduleId is provided, per-pad overrides (label, colorHue, channel,
+  note) are applied via useControlOverride / getControlOverride.
 */
 
 import { memo, useCallback } from 'react';
@@ -15,6 +16,7 @@ import { midi } from '@/features/midi-engine/MidiEngine';
 import { PAD_CHANNEL, controlId, padNoteFor } from '@/features/midi-engine/defaults';
 import { midiToNoteName } from '@/features/midi-engine/noteNames';
 import { usePerformanceStore, type PadBank } from '@/store/performanceStore';
+import { useControlOverride, getControlOverride } from '@/features/layout/useControlOverride';
 
 const BANK_HUES: Record<PadBank, number> = {
   A: 270, // violet
@@ -58,28 +60,47 @@ function BankButton({ bank, active, onSelect }: { bank: PadBank; active: boolean
 interface PadCellProps {
   bank: PadBank;
   index: number;
-  hue: number;
+  baseHue: number;
+  moduleId: string;
 }
 
-const PadCell = memo(function PadCell({ bank, index, hue }: PadCellProps) {
-  const note = padNoteFor(bank, index);
+const PadCell = memo(function PadCell({ bank, index, baseHue, moduleId }: PadCellProps) {
+  const defaultNote = padNoteFor(bank, index);
+  const cid = controlId.pad(bank, index);
+  const override = useControlOverride(moduleId, cid);
+
+  const effectiveHue = override?.colorHue ?? (baseHue + (index % 4) * 6 + Math.floor(index / 4) * 4) % 360;
+  const effectiveLabel = override?.label ?? midiToNoteName(defaultNote);
+
   const handlePress = useCallback(
-    (velocity: number) => midi.noteOn(PAD_CHANNEL, note, velocity),
-    [note],
+    (velocity: number) => {
+      const ov = getControlOverride(moduleId, cid);
+      const ch = ov?.channel ?? PAD_CHANNEL;
+      const note = ov?.note ?? defaultNote;
+      midi.noteOn(ch, note, velocity);
+    },
+    [moduleId, cid, defaultNote],
   );
-  const handleRelease = useCallback(() => midi.noteOff(PAD_CHANNEL, note), [note]);
+
+  const handleRelease = useCallback(() => {
+    const ov = getControlOverride(moduleId, cid);
+    const ch = ov?.channel ?? PAD_CHANNEL;
+    const note = ov?.note ?? defaultNote;
+    midi.noteOff(ch, note);
+  }, [moduleId, cid, defaultNote]);
+
   return (
     <Pad
-      controlId={controlId.pad(bank, index)}
-      label={midiToNoteName(note)}
-      hue={hue}
+      controlId={cid}
+      label={effectiveLabel}
+      hue={effectiveHue}
       onPress={handlePress}
       onRelease={handleRelease}
     />
   );
 });
 
-export const PadGrid = memo(function PadGrid() {
+export const PadGrid = memo(function PadGrid({ moduleId = '' }: { moduleId?: string }) {
   const padBank = usePerformanceStore((s) => s.padBank);
   const setPadBank = usePerformanceStore((s) => s.setPadBank);
   const baseHue = BANK_HUES[padBank];
@@ -101,10 +122,15 @@ export const PadGrid = memo(function PadGrid() {
       </header>
 
       <div className="grid grid-cols-4 gap-1.5">
-        {Array.from({ length: 16 }).map((_, i) => {
-          const hue = (baseHue + (i % 4) * 6 + Math.floor(i / 4) * 4) % 360;
-          return <PadCell key={`${padBank}-${i}`} bank={padBank} index={i} hue={hue} />;
-        })}
+        {Array.from({ length: 16 }).map((_, i) => (
+          <PadCell
+            key={`${padBank}-${i}`}
+            bank={padBank}
+            index={i}
+            baseHue={baseHue}
+            moduleId={moduleId}
+          />
+        ))}
       </div>
     </section>
   );
