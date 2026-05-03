@@ -60,10 +60,10 @@ export const TransportButton = memo(function TransportButton({
       onPointerCancel={handleUp}
       onPointerLeave={handleUp}
       className={
-        'flex select-none items-center gap-2 rounded-xl border border-border/60 bg-surface px-3 py-2 ' +
-        'font-mono text-xs uppercase tracking-widest text-muted transition-[transform,box-shadow,color] duration-100 ' +
+        'flex h-9 select-none items-center gap-2 rounded-md border border-borderSoft bg-surfaceLow px-3 ' +
+        'font-sans text-[11px] font-medium tracking-[0.08em] text-muted transition-[transform,box-shadow,color,background] duration-100 ' +
         'active:scale-[0.97] ' +
-        (glow ? 'text-text ' : 'hover:text-text ') +
+        (glow ? 'text-text bg-surfaceHi ' : 'hover:text-text hover:bg-surfaceHi ') +
         (learn.armed
           ? 'ring-2 ring-accent animate-pulse '
           : learn.learnMode
@@ -71,10 +71,12 @@ export const TransportButton = memo(function TransportButton({
             : '')
       }
       style={{
-        boxShadow: glow ? `0 0 18px hsl(${hue} 90% 60% / 0.7), inset 0 0 0 1px hsl(${hue} 90% 60% / 0.5)` : '',
+        boxShadow: glow
+          ? `0 0 12px hsl(${hue} 88% 60% / 0.45), inset 0 0 0 1px hsl(${hue} 88% 60% / 0.4)`
+          : '',
       }}
     >
-      {icon && <span className="text-base leading-none">{icon}</span>}
+      {icon && <span className="text-sm leading-none">{icon}</span>}
       <span>{label}</span>
     </button>
   );

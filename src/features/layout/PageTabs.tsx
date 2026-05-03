@@ -21,7 +21,7 @@ export const PageTabs = memo(function PageTabs() {
   if (layout.pages.length <= 1 && !editMode) return null;
 
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center gap-1.5">
       {layout.pages.map((page, i) => (
         <div key={page.id} className="flex items-center">
           <button
@@ -30,12 +30,8 @@ export const PageTabs = memo(function PageTabs() {
               e.preventDefault();
               setActivePage(i);
             }}
-            className={
-              'rounded-md px-3 py-1 font-mono text-[10px] uppercase tracking-wider transition ' +
-              (i === activePageIndex
-                ? 'bg-accent/20 text-accent'
-                : 'bg-surfaceHi/40 text-muted hover:text-text')
-            }
+            className="header-btn"
+            data-active={i === activePageIndex ? 'true' : 'false'}
           >
             {page.name}
           </button>
@@ -46,7 +42,7 @@ export const PageTabs = memo(function PageTabs() {
                 e.preventDefault();
                 removePage(page.id);
               }}
-              className="ml-0.5 px-1 font-mono text-[10px] text-muted hover:text-text"
+              className="ml-0.5 px-1.5 font-mono text-[10px] text-muted hover:text-text transition"
             >
               ×
             </button>
@@ -60,7 +56,8 @@ export const PageTabs = memo(function PageTabs() {
             e.preventDefault();
             addPage();
           }}
-          className="rounded-md bg-surfaceHi/40 px-2 py-1 font-mono text-[10px] text-muted hover:text-text transition"
+          className="header-btn"
+          style={{ padding: '0 10px' }}
         >
           +
         </button>

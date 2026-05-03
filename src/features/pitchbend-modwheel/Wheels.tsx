@@ -28,9 +28,9 @@ export const Wheels = memo(function Wheels() {
   }, [pitch, channel]);
 
   return (
-    <section className="glass flex shrink-0 flex-col gap-2 p-3">
-      <header>
-        <h3 className="font-mono text-[10px] uppercase tracking-widest text-muted">Wheels</h3>
+    <section className="module-panel">
+      <header className="module-header">
+        <h3 className="module-title">Wheels</h3>
       </header>
       <div className="flex items-center justify-center gap-3">
         <Wheel

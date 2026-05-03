@@ -40,10 +40,10 @@ function BankButton({ bank, active, onSelect }: { bank: PadBank; active: boolean
         onSelect();
       }}
       className={
-        'flex h-9 w-9 items-center justify-center rounded-lg font-mono text-sm tracking-wider transition ' +
+        'flex h-8 w-8 items-center justify-center rounded-md font-mono text-[12px] font-semibold tracking-wider transition ' +
         (active
-          ? 'bg-accent/20 text-accent shadow-glowSoft'
-          : 'bg-surfaceHi/40 text-muted hover:text-text') +
+          ? 'bg-accent/18 text-accent shadow-glowSoft'
+          : 'bg-surfaceHi/50 text-muted hover:text-text') +
         ' ' +
         (learn.armed
           ? 'ring-2 ring-accent animate-pulse'
@@ -106,9 +106,9 @@ export const PadGrid = memo(function PadGrid({ moduleId = '' }: { moduleId?: str
   const baseHue = BANK_HUES[padBank];
 
   return (
-    <section className="glass flex shrink-0 flex-col gap-2 p-3">
-      <header className="flex items-center justify-between">
-        <h3 className="font-mono text-[10px] uppercase tracking-widest text-muted">Pads</h3>
+    <section className="module-panel">
+      <header className="module-header">
+        <h3 className="module-title">Pads</h3>
         <div className="flex gap-1">
           {BANKS.map((b) => (
             <BankButton
@@ -121,7 +121,7 @@ export const PadGrid = memo(function PadGrid({ moduleId = '' }: { moduleId?: str
         </div>
       </header>
 
-      <div className="grid grid-cols-4 gap-1.5">
+      <div className="grid grid-cols-4 gap-2">
         {Array.from({ length: 16 }).map((_, i) => (
           <PadCell
             key={`${padBank}-${i}`}

@@ -124,21 +124,13 @@ export const PresetBrowser = memo(function PresetBrowser({
   return (
     <div className="glass flex h-full flex-col overflow-hidden">
       {/* Header */}
-      <div className="flex shrink-0 items-center justify-between border-b border-border/40 px-4 py-2">
-        <span className="font-mono text-xs uppercase tracking-widest text-muted">Presets</span>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={handleSaveCurrent}
-            className="rounded-md bg-accent/20 px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-accent transition hover:bg-accent/30"
-          >
+      <div className="flex shrink-0 items-center justify-between border-b border-borderSoft/60 px-3 py-2">
+        <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">Presets</span>
+        <div className="flex items-center gap-1.5">
+          <button type="button" onClick={handleSaveCurrent} className="header-btn" data-tone="accent">
             save current
           </button>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-md bg-surfaceHi/40 px-2 py-1 font-mono text-[10px] text-muted transition hover:text-text"
-          >
+          <button type="button" onClick={onClose} className="header-btn">
             close
           </button>
         </div>
@@ -156,26 +148,28 @@ export const PresetBrowser = memo(function PresetBrowser({
                 <div
                   key={l.id}
                   className={
-                    'flex flex-col gap-1 rounded-lg p-2 transition ' +
-                    (isActive ? 'bg-accent/10 ring-1 ring-accent/40' : 'bg-surfaceHi/30')
+                    'flex flex-col gap-1.5 rounded-md p-3 transition ' +
+                    (isActive
+                      ? 'bg-accent/10 border border-accent/40'
+                      : 'bg-surfaceLow/60 border border-borderSoft')
                   }
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="flex items-center gap-1.5 font-mono text-[11px] text-text">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="flex min-w-0 items-center gap-1.5 font-sans text-[12px] font-medium text-text">
                       {l.isBuiltIn && (
-                        <span className="text-[9px] text-muted" title="Built-in">🔒</span>
+                        <span className="font-mono text-[9px] text-muted" title="Built-in">▣</span>
                       )}
-                      {l.name}
+                      <span className="truncate">{l.name}</span>
                       {isActive && (
-                        <span className="font-mono text-[9px] text-accent">● active</span>
+                        <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-accent">active</span>
                       )}
                     </span>
-                    <div className="flex items-center gap-1">
+                    <div className="flex shrink-0 items-center gap-1">
                       {!isActive && (
                         <button
                           type="button"
                           onClick={() => void loadLayout(l.id)}
-                          className="rounded px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-accent transition hover:bg-accent/20"
+                          className="rounded-sm px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-accent transition hover:bg-accent/20"
                         >
                           load
                         </button>
@@ -183,7 +177,7 @@ export const PresetBrowser = memo(function PresetBrowser({
                       <button
                         type="button"
                         onClick={() => void handleDuplicate(l)}
-                        className="rounded px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-muted transition hover:text-text"
+                        className="rounded-sm px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-muted transition hover:text-text"
                       >
                         dup
                       </button>
@@ -192,14 +186,14 @@ export const PresetBrowser = memo(function PresetBrowser({
                           <button
                             type="button"
                             onClick={() => void handleRename(l)}
-                            className="rounded px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-muted transition hover:text-text"
+                            className="rounded-sm px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-muted transition hover:text-text"
                           >
                             ren
                           </button>
                           <button
                             type="button"
                             onClick={() => void handleDelete(l)}
-                            className="rounded px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-muted transition hover:text-warn"
+                            className="rounded-sm px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-muted transition hover:text-warn"
                           >
                             del
                           </button>
@@ -208,7 +202,7 @@ export const PresetBrowser = memo(function PresetBrowser({
                       <button
                         type="button"
                         onClick={() => void downloadJSON(l)}
-                        className="rounded px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-muted transition hover:text-text"
+                        className="rounded-sm px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-muted transition hover:text-text"
                       >
                         ↓
                       </button>
@@ -226,7 +220,7 @@ export const PresetBrowser = memo(function PresetBrowser({
       </div>
 
       {/* Import / footer */}
-      <div className="shrink-0 border-t border-border/40 px-4 py-3">
+      <div className="shrink-0 border-t border-borderSoft/60 px-3 py-3">
         <input
           ref={fileInputRef}
           type="file"
@@ -237,7 +231,7 @@ export const PresetBrowser = memo(function PresetBrowser({
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className="w-full rounded-md bg-surfaceHi/40 px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-muted transition hover:text-text"
+          className="header-btn w-full"
         >
           + Import JSON
         </button>

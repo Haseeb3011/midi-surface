@@ -225,54 +225,58 @@ export function PianoKeyboard() {
   const showLabels = layout.whiteWidth >= 30;
 
   return (
-    <section className="glass flex flex-col gap-2 p-3">
-      <header className="flex items-center justify-between gap-3 px-1">
-        <h3 className="font-mono text-[10px] uppercase tracking-widest text-muted">Keyboard</h3>
+    <section className="module-panel">
+      <header className="module-header">
+        <h3 className="module-title">Keyboard</h3>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1">
-            <span className="font-mono text-[10px] text-muted">root</span>
+            <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted">root</span>
             <button
               type="button"
               onPointerDown={(e) => {
                 e.preventDefault();
                 setOctave(startOctave - 1);
               }}
-              className="rounded-md bg-surfaceHi/40 px-2 py-1 font-mono text-[10px] text-muted hover:text-text"
+              className="header-btn"
+              style={{ height: 28, padding: '0 8px' }}
             >
               −
             </button>
-            <span className="w-8 text-center font-mono text-[10px] text-text/80">C{startOctave}</span>
+            <span className="w-9 text-center font-sans text-[11px] tabular-nums text-textSoft">C{startOctave}</span>
             <button
               type="button"
               onPointerDown={(e) => {
                 e.preventDefault();
                 setOctave(startOctave + 1);
               }}
-              className="rounded-md bg-surfaceHi/40 px-2 py-1 font-mono text-[10px] text-muted hover:text-text"
+              className="header-btn"
+              style={{ height: 28, padding: '0 8px' }}
             >
               +
             </button>
           </div>
           <div className="flex items-center gap-1">
-            <span className="font-mono text-[10px] text-muted">zoom</span>
+            <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted">zoom</span>
             <button
               type="button"
               onPointerDown={(e) => {
                 e.preventDefault();
                 setOctaves(octaves - 1);
               }}
-              className="rounded-md bg-surfaceHi/40 px-2 py-1 font-mono text-[10px] text-muted hover:text-text"
+              className="header-btn"
+              style={{ height: 28, padding: '0 8px' }}
             >
               −
             </button>
-            <span className="w-12 text-center font-mono text-[10px] text-text/80">{octaves} oct</span>
+            <span className="w-12 text-center font-sans text-[11px] tabular-nums text-textSoft">{octaves} oct</span>
             <button
               type="button"
               onPointerDown={(e) => {
                 e.preventDefault();
                 setOctaves(octaves + 1);
               }}
-              className="rounded-md bg-surfaceHi/40 px-2 py-1 font-mono text-[10px] text-muted hover:text-text"
+              className="header-btn"
+              style={{ height: 28, padding: '0 8px' }}
             >
               +
             </button>
@@ -330,10 +334,10 @@ export function PianoKeyboard() {
           onPointerMove={handleResizeMove}
           onPointerUp={handleResizeUp}
           onPointerCancel={handleResizeUp}
-          className="group flex h-3 w-full cursor-ns-resize items-center justify-center"
+          className="group mt-1 flex h-3 w-full cursor-ns-resize items-center justify-center"
           style={{ touchAction: 'none' }}
         >
-          <div className="h-1 w-12 rounded-full bg-border/60 transition group-hover:bg-accent/70" />
+          <div className="h-[3px] w-10 rounded-full bg-borderSoft transition group-hover:bg-accent/70" />
         </div>
       </div>
     </section>

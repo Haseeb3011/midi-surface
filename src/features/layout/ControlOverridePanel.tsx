@@ -215,15 +215,11 @@ export const ControlOverridePanel = memo(function ControlOverridePanel({
   if (controls.length === 0) {
     return (
       <div className="glass flex h-full flex-col">
-        <div className="flex items-center justify-between border-b border-border/40 px-4 py-2">
-          <span className="font-mono text-xs uppercase tracking-widest text-muted">
+        <div className="flex items-center justify-between border-b border-borderSoft/60 px-3 py-2">
+          <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">
             Overrides — {module.type}
           </span>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-md bg-surfaceHi/40 px-2 py-1 font-mono text-[10px] text-muted hover:text-text"
-          >
+          <button type="button" onClick={onClose} className="header-btn">
             close
           </button>
         </div>
@@ -236,15 +232,11 @@ export const ControlOverridePanel = memo(function ControlOverridePanel({
 
   return (
     <div className="glass flex h-full flex-col overflow-hidden">
-      <div className="flex shrink-0 items-center justify-between border-b border-border/40 px-4 py-2">
-        <span className="font-mono text-xs uppercase tracking-widest text-muted">
+      <div className="flex shrink-0 items-center justify-between border-b border-borderSoft/60 px-3 py-2">
+        <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">
           Overrides — {module.type}
         </span>
-        <button
-          type="button"
-          onClick={onClose}
-          className="rounded-md bg-surfaceHi/40 px-2 py-1 font-mono text-[10px] text-muted hover:text-text transition"
-        >
+        <button type="button" onClick={onClose} className="header-btn">
           close
         </button>
       </div>

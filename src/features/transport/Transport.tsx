@@ -29,7 +29,7 @@ export const Transport = memo(function Transport() {
   const tap = useRef(new TapTempo()).current;
 
   return (
-    <section className="glass flex flex-wrap items-center gap-3 px-4 py-2">
+    <section className="module-panel flex flex-wrap items-center gap-3">
       <TransportButton
         controlId={controlId.transport('play')}
         label="Play"
@@ -79,7 +79,7 @@ export const Transport = memo(function Transport() {
         }}
       />
 
-      <div className="ml-auto flex items-center gap-3">
+      <div className="ml-auto flex items-center gap-2">
         <button
           type="button"
           onPointerDown={(e) => {
@@ -87,19 +87,19 @@ export const Transport = memo(function Transport() {
             const bpm = tap.tap();
             if (bpm) setTempo(bpm);
           }}
-          className="rounded-xl border border-border/60 bg-surface px-3 py-2 font-mono text-xs uppercase tracking-widest text-muted hover:text-text"
+          className="flex h-9 select-none items-center rounded-md border border-borderSoft bg-surfaceLow px-4 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-muted transition hover:bg-surfaceHi hover:text-text active:scale-[0.97]"
         >
           Tap
         </button>
-        <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-surface px-3 py-2">
-          <span className="font-mono text-[10px] uppercase tracking-widest text-muted">BPM</span>
+        <div className="flex h-9 items-center gap-2 rounded-md border border-borderSoft bg-surfaceLow px-3">
+          <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted">BPM</span>
           <input
             type="number"
             min={20}
             max={300}
             value={tempo}
             onChange={(e) => setTempo(Number(e.target.value))}
-            className="w-14 bg-transparent text-right font-mono text-sm text-text outline-none"
+            className="w-14 bg-transparent text-right font-sans text-sm tabular-nums text-text outline-none"
           />
         </div>
       </div>

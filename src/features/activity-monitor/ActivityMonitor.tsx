@@ -110,20 +110,16 @@ export const ActivityMonitor = memo(function ActivityMonitor({
 
   return (
     <div className="glass flex h-full w-full flex-col overflow-hidden">
-      <div className="flex items-center gap-2 border-b border-border/40 px-4 py-2">
-        <span className="font-mono text-xs uppercase tracking-widest text-muted">Activity</span>
+      <div className="flex items-center gap-1.5 border-b border-borderSoft/60 px-3 py-2">
+        <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">Activity</span>
         <div className="flex-1" />
         {(['all', 'in', 'out'] as Filter[]).map((f) => (
           <button
             key={f}
             type="button"
             onClick={() => setFilter(f)}
-            className={
-              'rounded-md px-2 py-1 font-mono text-[10px] uppercase tracking-wider transition ' +
-              (filter === f
-                ? 'bg-accent/20 text-accent'
-                : 'bg-surfaceHi/40 text-muted hover:text-text')
-            }
+            className="header-btn"
+            data-active={filter === f ? 'true' : 'false'}
           >
             {f}
           </button>
@@ -135,7 +131,7 @@ export const ActivityMonitor = memo(function ActivityMonitor({
             seq.current++;
             force((n) => n + 1);
           }}
-          className="rounded-md bg-surfaceHi/40 px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-muted hover:text-text"
+          className="header-btn"
         >
           clear
         </button>
@@ -143,7 +139,7 @@ export const ActivityMonitor = memo(function ActivityMonitor({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md bg-surfaceHi/40 px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-muted hover:text-text"
+            className="header-btn"
           >
             close
           </button>

@@ -87,7 +87,7 @@ export const Fader = memo(function Fader({
         onWheel={handleWheel}
         onDoubleClick={() => onChange(clamp(defaultValue))}
         className={
-          'relative w-7 rounded-full border border-border/60 bg-surface ' +
+          'relative w-5 rounded-md border border-borderSoft bg-surfaceLow ' +
           (learn.armed
             ? 'ring-2 ring-accent animate-pulse'
             : learn.learnMode
@@ -98,28 +98,28 @@ export const Fader = memo(function Fader({
       >
         {/* track fill */}
         <div
-          className="pointer-events-none absolute inset-x-1 bottom-1 rounded-full"
+          className="pointer-events-none absolute inset-x-[2px] bottom-[2px] rounded-md"
           style={{
             height: thumbBottom,
-            background: `linear-gradient(180deg, hsl(${hue} 90% 65% / 0.65), hsl(${hue} 90% 50% / 0.85))`,
-            boxShadow: `0 0 12px hsl(${hue} 90% 60% / ${0.25 + norm * 0.4})`,
+            background: `linear-gradient(180deg, hsl(${hue} 88% 64% / 0.55), hsl(${hue} 88% 48% / 0.8))`,
+            boxShadow: `0 0 10px hsl(${hue} 90% 60% / ${0.10 + norm * 0.28})`,
             transition: 'height 60ms ease-out',
           }}
         />
-        {/* thumb */}
+        {/* thumb — slim bar, no shadow */}
         <div
-          className="pointer-events-none absolute left-1/2 h-3 w-[110%] -translate-x-1/2 rounded-md bg-text/90 shadow-[0_2px_6px_rgba(0,0,0,0.6)]"
+          className="pointer-events-none absolute left-1/2 h-2 w-[140%] -translate-x-1/2 rounded-sm bg-text"
           style={{
-            bottom: `calc(${thumbBottom} - 6px)`,
+            bottom: `calc(${thumbBottom} - 4px)`,
             transition: 'bottom 60ms ease-out',
           }}
         />
       </div>
-      <div className="mt-2 flex flex-col items-center">
+      <div className="mt-2 flex flex-col items-center leading-tight">
         {label && (
-          <span className="font-mono text-[10px] uppercase tracking-widest text-muted">{label}</span>
+          <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted">{label}</span>
         )}
-        <span className="font-mono text-[10px] text-text/80">{value}</span>
+        <span className="font-sans text-[10px] tabular-nums text-textSoft">{value}</span>
       </div>
     </div>
   );
