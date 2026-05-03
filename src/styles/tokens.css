@@ -1,44 +1,111 @@
 /*
-  Theme tokens. Live-tunable via the Theme Editor (Phase 4) by mutating CSS custom
-  properties on :root. Values are RGB triplets so Tailwind's `<alpha-value>` syntax
-  works (see tailwind.config.ts).
+  Design tokens — single source of truth for colors, radii, spacing, elevation.
+
+  Color tokens are RGB triplets (no rgb() wrapper) so Tailwind's <alpha-value>
+  syntax works (see tailwind.config.ts). Themes override the full color palette
+  via [data-theme="..."] on <html>; structure (radii, spacing, elevation) is
+  theme-invariant.
+
+  Default theme = LANDR. The legacy 'default' string in settingsStore migrates
+  to 'landr' via the v3 persist-version bump.
 */
 
 :root {
-  /* Surfaces (dark base, Vital-inspired) */
-  --bg: 10 10 20;
-  --surface: 18 18 32;
-  --surface-hi: 28 28 46;
-  --border: 60 58 92;
-  --muted: 130 130 160;
-  --text: 235 235 245;
+  /* Color palette — LANDR (deep teal/blue, minimal) is the new default. */
+  --bg:            12 30 44;
+  --surface-low:   14 36 52;
+  --surface:       20 46 64;
+  --surface-hi:    30 60 82;
+  --border-soft:   30 58 80;
+  --border:        50 86 116;
+  --border-strong: 84 130 168;
+  --text:          220 232 244;
+  --text-soft:     156 184 208;
+  --muted:         108 142 170;
+  --accent:        88 200 232;   /* cyan-teal */
+  --accent-2:      96 134 255;   /* deep blue */
 
-  /* Dynamic accents — drive the activity-reactive gradient.
-     dynamicAccent.ts (Phase 4) will mutate these in real time. */
-  --accent: 124 92 255;       /* violet */
-  --accent-2: 255 92 182;     /* magenta */
-
-  /* Status */
+  /* Status (theme-stable — same across all themes) */
   --warn: 255 165 60;
-  --ok: 80 220 140;
+  --ok:   80 220 140;
 
-  /* Hue rotation seed used by activity-driven background animation */
+  /* Radius scale */
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-xl: 18px;
+
+  /* Spacing scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+
+  /* Activity scalar (mutated by dynamic-accent system, currently a stub) */
   --activity: 0;
 }
 
-/* Future themes can be applied by setting [data-theme="..."] on <html>.
-   Listed here as placeholders for the Theme Editor to flip. */
+/* Vital — refined indigo / violet → magenta. */
+[data-theme='vital'] {
+  --bg:            10 10 22;
+  --surface-low:   16 16 28;
+  --surface:       22 22 38;
+  --surface-hi:    32 32 52;
+  --border-soft:   42 42 64;
+  --border:        62 60 96;
+  --border-strong: 92 88 132;
+  --text:          235 235 248;
+  --text-soft:     186 186 210;
+  --muted:         128 130 162;
+  --accent:        124 92 255;
+  --accent-2:      255 92 182;
+}
+
+/* Cyber — electric neon. */
 [data-theme='cyber'] {
-  --accent: 0 240 255;
-  --accent-2: 255 80 180;
+  --bg:            6 8 18;
+  --surface-low:   10 14 26;
+  --surface:       16 20 36;
+  --surface-hi:    24 30 52;
+  --border-soft:   32 40 70;
+  --border:        58 76 124;
+  --border-strong: 100 130 200;
+  --text:          230 244 255;
+  --text-soft:     160 200 230;
+  --muted:         108 144 184;
+  --accent:        0 240 255;
+  --accent-2:      255 80 180;
 }
 
+/* Sunset — warm orange / coral. */
 [data-theme='sunset'] {
-  --accent: 255 120 60;
-  --accent-2: 255 60 140;
+  --bg:            22 14 18;
+  --surface-low:   30 18 22;
+  --surface:       38 24 28;
+  --surface-hi:    52 32 38;
+  --border-soft:   62 38 44;
+  --border:        92 60 70;
+  --border-strong: 132 86 100;
+  --text:          250 234 226;
+  --text-soft:     220 184 170;
+  --muted:         184 138 124;
+  --accent:        255 120 60;
+  --accent-2:      255 60 140;
 }
 
+/* Mono — neutral grayscale. */
 [data-theme='mono'] {
-  --accent: 220 220 235;
-  --accent-2: 160 160 180;
+  --bg:            14 14 18;
+  --surface-low:   20 20 26;
+  --surface:       26 26 32;
+  --surface-hi:    36 36 44;
+  --border-soft:   46 46 54;
+  --border:        72 72 84;
+  --border-strong: 110 110 124;
+  --text:          240 240 246;
+  --text-soft:     192 192 204;
+  --muted:         140 140 152;
+  --accent:        220 220 235;
+  --accent-2:      160 160 180;
 }

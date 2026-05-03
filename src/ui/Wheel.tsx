@@ -117,7 +117,7 @@ export const Wheel = memo(function Wheel({
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
         className={
-          'relative w-9 overflow-hidden rounded-2xl border border-border/60 bg-surface ' +
+          'relative w-7 overflow-hidden rounded-md border border-borderSoft bg-surfaceLow ' +
           (learn.armed
             ? 'ring-2 ring-accent animate-pulse'
             : learn.learnMode
@@ -135,17 +135,17 @@ export const Wheel = memo(function Wheel({
         )}
         {/* thumb */}
         <div
-          className="pointer-events-none absolute left-1 right-1 h-6 rounded-md"
+          className="pointer-events-none absolute left-1 right-1 h-4 rounded-sm"
           style={{
-            bottom: `calc(${thumbBottom} - 12px)`,
-            background: `linear-gradient(180deg, hsl(${hue} 90% 70%), hsl(${hue} 90% 45%))`,
-            boxShadow: `0 0 16px hsl(${hue} 90% 60% / 0.55)`,
+            bottom: `calc(${thumbBottom} - 8px)`,
+            background: `linear-gradient(180deg, hsl(${hue} 88% 68%), hsl(${hue} 88% 48%))`,
+            boxShadow: `0 0 10px hsl(${hue} 90% 60% / 0.32)`,
             transition: dragging.current === null ? 'bottom 200ms cubic-bezier(0.2, 0.9, 0.2, 1)' : 'none',
           }}
         />
       </div>
-      <div className="mt-2 flex flex-col items-center">
-        <span className="font-mono text-[10px] uppercase tracking-widest text-muted">{label}</span>
+      <div className="mt-2 flex flex-col items-center leading-tight">
+        <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted">{label}</span>
       </div>
     </div>
   );

@@ -83,8 +83,9 @@ export function App() {
   }, []);
 
   // Apply persisted theme on mount and any time it changes.
+  // 'landr' lives on :root, so no data-theme attribute is needed for it.
   useEffect(() => {
-    if (theme === 'default') document.documentElement.removeAttribute('data-theme');
+    if (theme === 'landr') document.documentElement.removeAttribute('data-theme');
     else document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
@@ -127,16 +128,16 @@ export function App() {
   return (
     <div className="app-shell relative flex h-full w-full flex-col overflow-hidden">
       {/* Header */}
-      <header className="m-2 flex shrink-0 items-center gap-3 px-3 py-2">
+      <header className="flex shrink-0 items-center gap-4 border-b border-borderSoft/60 px-4 py-2.5">
         {/* Left: status dot + title */}
-        <div className="flex shrink-0 items-center gap-3">
+        <div className="flex shrink-0 items-center gap-2.5">
           <div
             className={
-              'h-3 w-3 rounded-full transition ' +
-              (outputId ? 'bg-ok glow-accent' : 'bg-warn')
+              'h-2.5 w-2.5 rounded-full transition ' +
+              (outputId ? 'bg-ok shadow-[0_0_10px_rgb(var(--ok)/0.7)]' : 'bg-warn')
             }
           />
-          <h1 className="font-mono text-sm tracking-widest text-text/90">MIDI SURFACE</h1>
+          <h1 className="font-mono text-[12px] font-semibold tracking-[0.22em] text-text/90">MIDI SURFACE</h1>
         </div>
 
         {/* Center: page tabs */}
@@ -145,11 +146,11 @@ export function App() {
         </div>
 
         {/* Right: port info + action buttons */}
-        <div className="flex shrink-0 items-center gap-2 text-xs">
-          <span className="rounded-md bg-surfaceHi/40 px-2 py-1 font-mono text-muted">
-            out: <span className="text-text">{outputName}</span>
+        <div className="flex shrink-0 items-center gap-1.5">
+          <span className="flex h-8 items-center rounded-md bg-surfaceHi/40 px-2.5 font-mono text-[10px] uppercase tracking-[0.12em] text-muted">
+            out:&nbsp;<span className="text-text">{outputName}</span>
           </span>
-          <span className="rounded-md bg-surfaceHi/40 px-2 py-1 font-mono text-muted">
+          <span className="flex h-8 items-center rounded-md bg-surfaceHi/40 px-2.5 font-mono text-[10px] uppercase tracking-[0.12em] text-muted">
             ch{defaultChannel + 1}
           </span>
           <button
@@ -159,10 +160,8 @@ export function App() {
               void toggleFullscreen();
             }}
             title="Fullscreen (recommended for touchscreen play)"
-            className={
-              'rounded-md px-2 py-1 font-mono text-[10px] uppercase tracking-wider transition ' +
-              (fs ? 'bg-accent/20 text-accent' : 'bg-surfaceHi/40 text-muted hover:text-text')
-            }
+            className="header-btn"
+            data-active={fs ? 'true' : 'false'}
           >
             {fs ? 'exit fs' : 'fullscreen'}
           </button>
@@ -184,7 +183,8 @@ export function App() {
                   }
                   toggleEditMode();
                 }}
-                className="rounded-md bg-ok/20 px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-ok transition hover:bg-ok/30"
+                className="header-btn"
+                data-tone="ok"
               >
                 save
               </button>
@@ -194,7 +194,7 @@ export function App() {
                   e.preventDefault();
                   void discardChanges();
                 }}
-                className="rounded-md bg-surfaceHi/40 px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-muted transition hover:text-text"
+                className="header-btn"
               >
                 discard
               </button>
@@ -207,7 +207,7 @@ export function App() {
                 toggleEditMode();
               }}
               title="Edit layout"
-              className="rounded-md bg-surfaceHi/40 px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-muted transition hover:text-text"
+              className="header-btn"
             >
               edit
             </button>
@@ -218,48 +218,32 @@ export function App() {
               e.preventDefault();
               toggleLearnMode();
             }}
-            className={
-              'rounded-md px-2 py-1 font-mono text-[10px] uppercase tracking-wider transition ' +
-              (learnMode
-                ? 'bg-accent text-white shadow-glowSoft animate-pulse'
-                : 'bg-surfaceHi/40 text-muted hover:text-text')
-            }
+            className={'header-btn ' + (learnMode ? 'animate-pulse' : '')}
+            data-active={learnMode ? 'true' : 'false'}
           >
             learn
           </button>
           <button
             type="button"
             onClick={() => setPane(pane === 'activity' ? 'none' : 'activity')}
-            className={
-              'rounded-md px-2 py-1 font-mono text-[10px] uppercase tracking-wider transition ' +
-              (pane === 'activity'
-                ? 'bg-accent/20 text-accent'
-                : 'bg-surfaceHi/40 text-muted hover:text-text')
-            }
+            className="header-btn"
+            data-active={pane === 'activity' ? 'true' : 'false'}
           >
             activity
           </button>
           <button
             type="button"
             onClick={() => setPane(pane === 'presets' ? 'none' : 'presets')}
-            className={
-              'rounded-md px-2 py-1 font-mono text-[10px] uppercase tracking-wider transition ' +
-              (pane === 'presets'
-                ? 'bg-accent/20 text-accent'
-                : 'bg-surfaceHi/40 text-muted hover:text-text')
-            }
+            className="header-btn"
+            data-active={pane === 'presets' ? 'true' : 'false'}
           >
             presets
           </button>
           <button
             type="button"
             onClick={() => setPane(pane === 'settings' ? 'none' : 'settings')}
-            className={
-              'rounded-md px-2 py-1 font-mono text-[10px] uppercase tracking-wider transition ' +
-              (pane === 'settings'
-                ? 'bg-accent/20 text-accent'
-                : 'bg-surfaceHi/40 text-muted hover:text-text')
-            }
+            className="header-btn"
+            data-active={pane === 'settings' ? 'true' : 'false'}
           >
             settings
           </button>
@@ -267,7 +251,7 @@ export function App() {
       </header>
 
       {/* Main area */}
-      <div className="flex flex-1 gap-2 overflow-hidden px-2 pb-2">
+      <div className="flex flex-1 gap-3 overflow-hidden p-3">
         <div className="min-h-0 flex-1 overflow-auto">
           {activePage ? (
             <LayoutRenderer pageId={activePage.id} />

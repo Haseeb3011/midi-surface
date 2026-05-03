@@ -11,6 +11,9 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import type { MidiChannel } from '@/features/midi-engine/types';
 import { debouncedLocalStorage } from '@/persistence/debouncedStorage';
 
+export type ThemeName = 'landr' | 'vital' | 'cyber' | 'sunset' | 'mono';
+export const THEME_NAMES: ThemeName[] = ['landr', 'vital', 'cyber', 'sunset', 'mono'];
+
 interface SettingsState {
   /** Persisted output port id; `MidiEngine` is wired up from this on boot. */
   outputId: string | null;
@@ -22,7 +25,7 @@ interface SettingsState {
   panicOnBlur: boolean;
   /** Show the activity monitor pane. */
   activityVisible: boolean;
-  theme: 'default' | 'cyber' | 'sunset' | 'mono';
+  theme: ThemeName;
   /** Number of octaves rendered by the piano keyboard (1..7). */
   pianoOctaves: number;
   /** Piano keyboard height in px. */
@@ -50,7 +53,7 @@ export const useSettingsStore = create<SettingsState>()(
       velocity: 100,
       panicOnBlur: true,
       activityVisible: false,
-      theme: 'default',
+      theme: 'landr' as ThemeName,
       pianoOctaves: 3,
       pianoHeight: 200,
 
@@ -67,8 +70,17 @@ export const useSettingsStore = create<SettingsState>()(
     }),
     {
       name: 'midi-surface-settings',
-      version: 2,
+      version: 3,
       storage: createJSONStorage(() => debouncedLocalStorage(300)),
+      migrate: (persisted, version) => {
+        const s = (persisted ?? {}) as Partial<SettingsState>;
+        if (version < 3) {
+          // Legacy 'default' theme maps to the new LANDR default.
+          const legacyTheme = (s.theme as string | undefined) ?? 'landr';
+          s.theme = (legacyTheme === 'default' ? 'landr' : legacyTheme) as ThemeName;
+        }
+        return s as SettingsState;
+      },
     },
   ),
 );

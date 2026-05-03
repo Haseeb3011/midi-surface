@@ -1,14 +1,34 @@
 import { useMidiStore } from '@/store/midiStore';
-import { useSettingsStore } from '@/store/settingsStore';
+import { useSettingsStore, THEME_NAMES, type ThemeName } from '@/store/settingsStore';
 import type { MidiChannel } from '@/features/midi-engine/types';
 import { midi } from '@/features/midi-engine/MidiEngine';
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <div className="space-y-2">
-    <h3 className="font-mono text-[10px] uppercase tracking-widest text-muted">{title}</h3>
+    <h3 className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-muted">
+      {title}
+    </h3>
     {children}
   </div>
 );
+
+// Static swatch palette for each theme — first triplet is bg, rest are accents.
+// Used purely for the picker preview; the live theme switch reads CSS vars.
+const THEME_PREVIEWS: Record<ThemeName, { bg: string; accent: string; accent2: string }> = {
+  landr:  { bg: '#0c1e2c', accent: '#58c8e8', accent2: '#6086ff' },
+  vital:  { bg: '#0a0a16', accent: '#7c5cff', accent2: '#ff5cb6' },
+  cyber:  { bg: '#060812', accent: '#00f0ff', accent2: '#ff50b4' },
+  sunset: { bg: '#160e12', accent: '#ff783c', accent2: '#ff3c8c' },
+  mono:   { bg: '#0e0e12', accent: '#dcdceb', accent2: '#a0a0b4' },
+};
+
+const THEME_LABELS: Record<ThemeName, string> = {
+  landr:  'LANDR',
+  vital:  'Vital',
+  cyber:  'Cyber',
+  sunset: 'Sunset',
+  mono:   'Mono',
+};
 
 export function SettingsPanel({ onClose }: { onClose: () => void }) {
   const ports = useMidiStore((s) => s.ports);
@@ -23,14 +43,12 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="glass flex h-full w-full flex-col">
-      <div className="flex items-center gap-2 border-b border-border/40 px-4 py-2">
-        <span className="font-mono text-xs uppercase tracking-widest text-muted">Settings</span>
+      <div className="flex items-center gap-1.5 border-b border-borderSoft/60 px-3 py-2">
+        <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">
+          Settings
+        </span>
         <div className="flex-1" />
-        <button
-          type="button"
-          onClick={onClose}
-          className="rounded-md bg-surfaceHi/40 px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-muted hover:text-text"
-        >
+        <button type="button" onClick={onClose} className="header-btn">
           close
         </button>
       </div>
@@ -44,7 +62,7 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
               setOutput(id);
               settings.setOutputId(id);
             }}
-            className="w-full rounded-lg border border-border/60 bg-surface px-3 py-2 text-sm text-text"
+            className="w-full rounded-md border border-borderSoft bg-surfaceLow px-3 py-2 font-sans text-[13px] text-text outline-none focus:border-accent/60"
           >
             <option value="">— Select output —</option>
             {outputs.map((p) => (
@@ -54,7 +72,7 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
             ))}
           </select>
           {outputs.length === 0 && (
-            <p className="text-xs text-warn">
+            <p className="font-sans text-[12px] text-warn">
               No outputs detected. Open loopMIDI and create a port.
             </p>
           )}
@@ -68,7 +86,7 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
               setInput(id);
               settings.setInputId(id);
             }}
-            className="w-full rounded-lg border border-border/60 bg-surface px-3 py-2 text-sm text-text"
+            className="w-full rounded-md border border-borderSoft bg-surfaceLow px-3 py-2 font-sans text-[13px] text-text outline-none focus:border-accent/60"
           >
             <option value="">— None —</option>
             {inputs.map((p) => (
@@ -87,9 +105,9 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
                 type="button"
                 onClick={() => settings.setDefaultChannel(i as MidiChannel)}
                 className={
-                  'rounded-md py-1.5 font-mono text-xs transition ' +
+                  'rounded-md py-1.5 font-sans text-[12px] tabular-nums font-medium transition ' +
                   (settings.defaultChannel === i
-                    ? 'bg-accent text-white shadow-glowSoft'
+                    ? 'bg-accent text-bg shadow-glowSoft'
                     : 'bg-surfaceHi/40 text-muted hover:text-text')
                 }
               >
@@ -101,56 +119,75 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
 
         <Section title="Octave / Velocity">
           <div className="flex items-center gap-3">
-            <label className="flex-1 text-sm text-muted">Octave</label>
+            <label className="flex-1 font-sans text-[13px] text-textSoft">Octave</label>
             <input
               type="number"
               min={0}
               max={8}
               value={settings.octave}
               onChange={(e) => settings.setOctave(Number(e.target.value))}
-              className="w-16 rounded-md border border-border/60 bg-surface px-2 py-1 text-right text-sm"
+              className="w-16 rounded-md border border-borderSoft bg-surfaceLow px-2 py-1 text-right font-sans text-[13px] tabular-nums text-text outline-none focus:border-accent/60"
             />
           </div>
           <div className="flex items-center gap-3">
-            <label className="flex-1 text-sm text-muted">Velocity</label>
+            <label className="flex-1 font-sans text-[13px] text-textSoft">Velocity</label>
             <input
               type="number"
               min={1}
               max={127}
               value={settings.velocity}
               onChange={(e) => settings.setVelocity(Number(e.target.value))}
-              className="w-16 rounded-md border border-border/60 bg-surface px-2 py-1 text-right text-sm"
+              className="w-16 rounded-md border border-borderSoft bg-surfaceLow px-2 py-1 text-right font-sans text-[13px] tabular-nums text-text outline-none focus:border-accent/60"
             />
           </div>
         </Section>
 
         <Section title="Theme">
-          <div className="grid grid-cols-4 gap-1">
-            {(['default', 'cyber', 'sunset', 'mono'] as const).map((t) => (
-              <button
-                key={t}
-                type="button"
-                onClick={() => {
-                  settings.setTheme(t);
-                  if (t === 'default') document.documentElement.removeAttribute('data-theme');
-                  else document.documentElement.setAttribute('data-theme', t);
-                }}
-                className={
-                  'rounded-md py-1.5 font-mono text-[10px] uppercase transition ' +
-                  (settings.theme === t
-                    ? 'bg-accent/20 text-accent'
-                    : 'bg-surfaceHi/40 text-muted hover:text-text')
-                }
-              >
-                {t}
-              </button>
-            ))}
+          <div className="grid grid-cols-1 gap-1.5">
+            {THEME_NAMES.map((t) => {
+              const preview = THEME_PREVIEWS[t];
+              const isActive = settings.theme === t;
+              return (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => settings.setTheme(t)}
+                  className={
+                    'flex items-center gap-3 rounded-md border px-3 py-2 transition ' +
+                    (isActive
+                      ? 'border-accent/60 bg-accent/10'
+                      : 'border-borderSoft bg-surfaceLow/60 hover:border-border')
+                  }
+                >
+                  <div
+                    className="flex h-6 w-12 shrink-0 items-center overflow-hidden rounded-sm border border-borderSoft"
+                    style={{ background: preview.bg }}
+                  >
+                    <div className="h-full w-1/2" style={{ background: preview.accent }} />
+                    <div className="h-full w-1/2" style={{ background: preview.accent2 }} />
+                  </div>
+                  <span
+                    className={
+                      'flex-1 text-left font-sans text-[12px] font-medium tracking-wide ' +
+                      (isActive ? 'text-accent' : 'text-text')
+                    }
+                  >
+                    {THEME_LABELS[t]}
+                  </span>
+                  {isActive && (
+                    <span className="font-mono text-[9px] uppercase tracking-[0.16em] text-accent">
+                      active
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </Section>
 
         <Section title="Behavior">
-          <label className="flex items-center justify-between text-sm">
-            <span className="text-muted">Panic on focus loss</span>
+          <label className="flex items-center justify-between font-sans text-[13px]">
+            <span className="text-textSoft">Panic on focus loss</span>
             <input
               type="checkbox"
               checked={settings.panicOnBlur}
@@ -161,14 +198,14 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
           <button
             type="button"
             onClick={() => midi.panic()}
-            className="w-full rounded-md bg-warn/20 py-2 font-mono text-xs uppercase tracking-widest text-warn hover:bg-warn/30"
+            className="w-full rounded-md bg-warn/16 py-2 font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-warn transition hover:bg-warn/26"
           >
             Panic — All Notes Off
           </button>
         </Section>
 
         <Section title="QWERTY fallback">
-          <p className="text-xs text-muted">
+          <p className="font-sans text-[12px] leading-relaxed text-textSoft">
             A–L row plays white keys, W/E/T/Y/U/O/P black. Z/X shift octave, C/V shift velocity.
           </p>
         </Section>

@@ -90,10 +90,8 @@ export const Knob = memo(function Knob({
   const arcLen = 2 * Math.PI * r * (ARC_SWEEP / 360);
   const filled = arcLen * norm;
 
-  // Polar to cartesian for the indicator dot.
+  // Polar angle for the indicator line.
   const rad = (angle * Math.PI) / 180;
-  const dotX = cx + Math.sin(rad) * (r - 3);
-  const dotY = cy - Math.cos(rad) * (r - 3);
 
   return (
     <div
@@ -120,7 +118,7 @@ export const Knob = memo(function Knob({
         height={size}
         viewBox={`0 0 ${size} ${size}`}
         className="overflow-visible"
-        style={{ filter: `drop-shadow(0 0 8px hsl(${hue} 90% 60% / ${0.2 + norm * 0.5}))` }}
+        style={{ filter: `drop-shadow(0 0 6px hsl(${hue} 90% 60% / ${0.06 + norm * 0.22}))` }}
       >
         {/* track */}
         <circle
@@ -128,12 +126,11 @@ export const Knob = memo(function Knob({
           cy={cy}
           r={r}
           fill="none"
-          stroke="rgb(var(--border))"
-          strokeWidth={3}
+          stroke="rgb(var(--border-soft))"
+          strokeWidth={2}
           strokeLinecap="round"
           strokeDasharray={`${arcLen} ${1000}`}
           transform={`rotate(${ARC_START + 90} ${cx} ${cy})`}
-          opacity={0.5}
         />
         {/* filled arc */}
         <circle
@@ -142,33 +139,43 @@ export const Knob = memo(function Knob({
           r={r}
           fill="none"
           stroke={`hsl(${hue} 90% 65%)`}
-          strokeWidth={3}
+          strokeWidth={2}
           strokeLinecap="round"
           strokeDasharray={`${filled} ${1000}`}
           transform={`rotate(${ARC_START + 90} ${cx} ${cy})`}
         />
-        {/* knob body */}
+        {/* knob body — recessed look via two stacked circles */}
         <circle
           cx={cx}
           cy={cy}
-          r={r - 9}
-          fill="rgb(var(--surface-hi))"
-          stroke="rgb(var(--border))"
+          r={r - 7}
+          fill="rgb(var(--surface-low))"
+          stroke="rgb(var(--border-soft))"
           strokeWidth={1}
         />
-        {/* indicator dot */}
         <circle
-          cx={dotX}
-          cy={dotY}
-          r={2.5}
-          fill={`hsl(${hue} 95% 75%)`}
+          cx={cx}
+          cy={cy - 1}
+          r={r - 9}
+          fill="rgb(var(--surface-hi))"
+          opacity={0.85}
+        />
+        {/* indicator — thin line from rim inward (LANDR style) */}
+        <line
+          x1={cx + Math.sin(rad) * (r - 9)}
+          y1={cy - Math.cos(rad) * (r - 9)}
+          x2={cx + Math.sin(rad) * (r - 4)}
+          y2={cy - Math.cos(rad) * (r - 4)}
+          stroke={`hsl(${hue} 95% 78%)`}
+          strokeWidth={1.75}
+          strokeLinecap="round"
         />
       </svg>
-      <div className="mt-1 flex flex-col items-center">
+      <div className="mt-1.5 flex flex-col items-center leading-tight">
         {label && (
-          <span className="font-mono text-[10px] uppercase tracking-widest text-muted">{label}</span>
+          <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted">{label}</span>
         )}
-        <span className="font-mono text-[10px] text-text/80">{value}</span>
+        <span className="font-sans text-[10px] tabular-nums text-textSoft">{value}</span>
       </div>
     </div>
   );

@@ -56,12 +56,12 @@ const KnobControl = memo(function KnobControl({ index, moduleId }: KnobControlPr
 
 export const KnobRow = memo(function KnobRow({ moduleId = '' }: { moduleId?: string }) {
   return (
-    <section className="glass flex shrink-0 flex-col gap-1.5 p-3">
-      <header className="flex items-center justify-between">
-        <h3 className="font-mono text-[10px] uppercase tracking-widest text-muted">Knobs</h3>
-        <span className="font-mono text-[10px] text-muted">CC {KNOB_CC_BASE}–{KNOB_CC_BASE + 7}</span>
+    <section className="module-panel">
+      <header className="module-header">
+        <h3 className="module-title">Knobs</h3>
+        <span className="module-meta">CC {KNOB_CC_BASE}–{KNOB_CC_BASE + 7}</span>
       </header>
-      <div className="grid grid-cols-8 gap-1">
+      <div className="grid grid-cols-8 gap-2">
         {Array.from({ length: 8 }).map((_, i) => (
           <KnobControl key={i} index={i} moduleId={moduleId} />
         ))}

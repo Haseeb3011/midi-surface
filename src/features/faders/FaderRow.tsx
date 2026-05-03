@@ -55,12 +55,12 @@ const FaderControl = memo(function FaderControl({ index, moduleId }: FaderContro
 
 export const FaderRow = memo(function FaderRow({ moduleId = '' }: { moduleId?: string }) {
   return (
-    <section className="glass flex shrink-0 flex-col gap-1.5 p-3">
-      <header className="flex items-center justify-between">
-        <h3 className="font-mono text-[10px] uppercase tracking-widest text-muted">Faders</h3>
-        <span className="font-mono text-[10px] text-muted">CC {FADER_CC_BASE}–{FADER_CC_BASE + 7}</span>
+    <section className="module-panel">
+      <header className="module-header">
+        <h3 className="module-title">Faders</h3>
+        <span className="module-meta">CC {FADER_CC_BASE}–{FADER_CC_BASE + 7}</span>
       </header>
-      <div className="grid grid-cols-8 gap-2">
+      <div className="grid grid-cols-8 gap-3">
         {Array.from({ length: 8 }).map((_, i) => (
           <FaderControl key={i} index={i} moduleId={moduleId} />
         ))}
