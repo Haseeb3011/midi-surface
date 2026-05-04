@@ -44,17 +44,25 @@ export const usePerformanceStore = create<PerformanceState>()(
       tempo: 120,
 
       setPadBank: (padBank) => set({ padBank }),
+      // setKnob / setFader mutate the array in place to avoid an allocation
+      // per drag tick. Safe because every consumer subscribes via
+      // `s.knobs[i]` / `s.faders[i]` (primitives) — reference equality on
+      // the array isn't used for fine-grained reactivity. The no-op
+      // fast-path bails out when the rounded value is unchanged, sparing
+      // most subscriber ticks during slow drags.
       setKnob: (i, value) =>
         set((s) => {
-          const knobs = s.knobs.slice();
-          knobs[i] = clamp7(value);
-          return { knobs };
+          const v = clamp7(value);
+          if (s.knobs[i] === v) return s;
+          s.knobs[i] = v;
+          return { knobs: s.knobs };
         }),
       setFader: (i, value) =>
         set((s) => {
-          const faders = s.faders.slice();
-          faders[i] = clamp7(value);
-          return { faders };
+          const v = clamp7(value);
+          if (s.faders[i] === v) return s;
+          s.faders[i] = v;
+          return { faders: s.faders };
         }),
       setModWheel: (modWheel) => set({ modWheel: clamp7(modWheel) }),
       setLoop: (loop) => set({ loop }),

@@ -203,6 +203,46 @@
     color: rgb(var(--warn));
   }
 
+  /*
+    .transport-btn — pill button with imperative press feedback.
+    React owns `data-active` (latched state). Pointer handlers toggle
+    `data-pressed` directly on the DOM element — zero React state, zero
+    re-renders on press / release.
+  */
+  .transport-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 36px;
+    padding: 0 12px;
+    border-radius: var(--r-md);
+    border: 1px solid rgb(var(--border-soft));
+    background: rgb(var(--surface-low));
+    color: rgb(var(--muted));
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    user-select: none;
+    cursor: pointer;
+    --btn-hue: 270;
+  }
+  .transport-btn:hover {
+    color: rgb(var(--text));
+    background: rgb(var(--surface-hi));
+  }
+  .transport-btn:active {
+    transform: scale(0.97);
+  }
+  .transport-btn[data-active='1'],
+  .transport-btn[data-pressed='1'] {
+    color: rgb(var(--text));
+    background: rgb(var(--surface-hi));
+    box-shadow:
+      0 0 12px hsl(var(--btn-hue) 88% 60% / 0.45),
+      inset 0 0 0 1px hsl(var(--btn-hue) 88% 60% / 0.4);
+  }
+
   .glow-accent {
     box-shadow:
       0 0 0 1px rgb(var(--accent) / 0.4),
@@ -275,7 +315,7 @@
     border-bottom-right-radius: 6px;
     border-left: 1px solid rgb(var(--border-soft));
     box-shadow: inset 0 -6px 10px rgb(0 0 0 / 0.15);
-    transition: background 60ms ease-out;
+    /* No transition — instant feedback on chord press / release. */
     will-change: background, box-shadow;
   }
   .piano-key-white[data-active='1'] {
@@ -296,7 +336,7 @@
     border-bottom-right-radius: 6px;
     border: 1px solid rgb(var(--border) / 0.7);
     box-shadow: inset 0 -6px 10px rgb(0 0 0 / 0.55);
-    transition: background 60ms ease-out;
+    /* No transition — instant feedback on chord press / release. */
     will-change: background, box-shadow;
   }
   .piano-key-black[data-active='1'] {

@@ -1,14 +1,15 @@
 /*
   Control override accessors.
 
-  Two forms:
-  - useControlOverride (React hook) — subscribe to override in render paths
-    (label display, color). Triggers re-render only when this specific control's
-    override changes.
-  - getControlOverride (pure getter) — reads Zustand state synchronously for
-    the MIDI send path. No React, no subscription, zero overhead when null.
+  Both the hook (render path) and the synchronous getter (MIDI send path) read
+  from `layoutStore.moduleIndex` — a Map<id, ModuleInstance> rebuilt on every
+  layout mutation. That makes lookup O(1) regardless of how many pages or
+  modules the user has. The selector closure is stable per (moduleId, controlId)
+  pair via useMemo, so Zustand's shallow-equality check can short-circuit on
+  unchanged overrides instead of re-running across all subscribers.
 */
 
+import { useMemo } from 'react';
 import { useLayoutStore } from '@/store/layoutStore';
 import type { ControlOverride } from './types';
 
@@ -16,25 +17,25 @@ export function useControlOverride(
   moduleId: string,
   controlId: string,
 ): ControlOverride | null {
-  return useLayoutStore((s) => {
-    if (!s.layout) return null;
-    for (const page of s.layout.pages) {
-      const mod = page.modules.find((m) => m.id === moduleId);
-      if (mod) return mod.overrides?.controls?.[controlId] ?? null;
-    }
-    return null;
-  });
+  const selector = useMemo(
+    () =>
+      (s: ReturnType<typeof useLayoutStore.getState>): ControlOverride | null => {
+        if (!moduleId) return null;
+        const m = s.moduleIndex.get(moduleId);
+        if (!m) return null;
+        return m.overrides?.controls?.[controlId] ?? null;
+      },
+    [moduleId, controlId],
+  );
+  return useLayoutStore(selector);
 }
 
 export function getControlOverride(
   moduleId: string,
   controlId: string,
 ): ControlOverride | null {
-  const { layout } = useLayoutStore.getState();
-  if (!layout) return null;
-  for (const page of layout.pages) {
-    const mod = page.modules.find((m) => m.id === moduleId);
-    if (mod) return mod.overrides?.controls?.[controlId] ?? null;
-  }
-  return null;
+  if (!moduleId) return null;
+  const m = useLayoutStore.getState().moduleIndex.get(moduleId);
+  if (!m) return null;
+  return m.overrides?.controls?.[controlId] ?? null;
 }
