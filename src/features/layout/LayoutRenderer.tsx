@@ -1,9 +1,9 @@
 /*
-  LayoutRenderer — maps a LayoutPage's modules[] into a 4-column CSS Grid.
-
-  Performance mode: bare divs, zero dnd-kit overhead.
-  Edit mode: DndContext + SortableContext + ModuleWrapper with drag handles.
-  Module picker appears as trailing tiles in edit mode.
+  LayoutRenderer — picks PerformanceGrid (no edit chrome, no dnd-kit) or
+  EditableGrid (DndContext + SortableContext + ModuleWrapper) based on
+  editMode. The split is deliberate: in performance mode we don't subscribe
+  to editMode at all on the inner grid, so flipping edit mode never re-runs
+  the module render path during play.
 */
 
 import { memo, useCallback } from 'react';
@@ -92,9 +92,41 @@ function AddModulePicker({ pageId }: { pageId: string }) {
   );
 }
 
-export const LayoutRenderer = memo(function LayoutRenderer({ pageId }: { pageId: string }) {
-  const layout = useLayoutStore((s) => s.layout);
-  const editMode = useLayoutStore((s) => s.editMode);
+/* PerformanceGrid — render-only path used during play. Subscribes ONLY to the
+   active page's modules array; never sees editMode flips. Stable selector
+   means flipping edit mode does not re-render this subtree. */
+const PerformanceGrid = memo(function PerformanceGrid({ pageId }: { pageId: string }) {
+  const modules = useLayoutStore((s) => {
+    const page = s.layout?.pages.find((p) => p.id === pageId);
+    return page?.modules ?? null;
+  });
+  if (!modules) return null;
+  return (
+    <div
+      className="grid content-start gap-2"
+      style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}
+    >
+      {modules.map((m) => (
+        <div
+          key={m.id}
+          className="min-w-0"
+          style={{ gridColumn: `span ${m.colSpan}` }}
+        >
+          {renderModuleContent(m)}
+        </div>
+      ))}
+    </div>
+  );
+});
+
+/* EditableGrid — only mounted when editMode is true. Pulls in dnd-kit and
+   the module wrappers. Lives behind the editMode branch so its sensors and
+   contexts cost nothing during normal play. */
+const EditableGrid = memo(function EditableGrid({ pageId }: { pageId: string }) {
+  const modules = useLayoutStore((s) => {
+    const page = s.layout?.pages.find((p) => p.id === pageId);
+    return page?.modules ?? null;
+  });
   const reorderModules = useLayoutStore((s) => s.reorderModules);
 
   const sensors = useSensors(
@@ -106,17 +138,46 @@ export const LayoutRenderer = memo(function LayoutRenderer({ pageId }: { pageId:
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
       const { active, over } = event;
-      if (!over || active.id === over.id || !layout) return;
-      const page = layout.pages.find((p) => p.id === pageId);
-      if (!page) return;
-      const fromIndex = page.modules.findIndex((m) => m.id === active.id);
-      const toIndex = page.modules.findIndex((m) => m.id === over.id);
+      if (!over || active.id === over.id || !modules) return;
+      const fromIndex = modules.findIndex((m) => m.id === active.id);
+      const toIndex = modules.findIndex((m) => m.id === over.id);
       if (fromIndex !== -1 && toIndex !== -1) {
         reorderModules(pageId, fromIndex, toIndex);
       }
     },
-    [layout, pageId, reorderModules],
+    [modules, pageId, reorderModules],
   );
+
+  if (!modules) return null;
+  const moduleIds = modules.map((m) => m.id);
+
+  return (
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      modifiers={[restrictToParentElement]}
+      onDragEnd={handleDragEnd}
+    >
+      <SortableContext items={moduleIds} strategy={rectSortingStrategy}>
+        <div
+          className="grid content-start gap-2"
+          style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}
+        >
+          {modules.map((m) => (
+            <ModuleWrapper key={m.id} instance={m} pageId={pageId}>
+              {renderModuleContent(m)}
+            </ModuleWrapper>
+          ))}
+          <AddModulePicker pageId={pageId} />
+        </div>
+      </SortableContext>
+    </DndContext>
+  );
+});
+
+export const LayoutRenderer = memo(function LayoutRenderer({ pageId }: { pageId: string }) {
+  const layout = useLayoutStore((s) => s.layout);
+  const editMode = useLayoutStore((s) => s.editMode);
 
   if (!layout) {
     return (
@@ -126,50 +187,7 @@ export const LayoutRenderer = memo(function LayoutRenderer({ pageId }: { pageId:
     );
   }
 
-  const page = layout.pages.find((p) => p.id === pageId);
-  if (!page) return null;
-
-  const moduleIds = page.modules.map((m) => m.id);
-
-  if (editMode) {
-    return (
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        modifiers={[restrictToParentElement]}
-        onDragEnd={handleDragEnd}
-      >
-        <SortableContext items={moduleIds} strategy={rectSortingStrategy}>
-          <div
-            className="grid content-start gap-2"
-            style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}
-          >
-            {page.modules.map((m) => (
-              <ModuleWrapper key={m.id} instance={m} pageId={page.id}>
-                {renderModuleContent(m)}
-              </ModuleWrapper>
-            ))}
-            <AddModulePicker pageId={page.id} />
-          </div>
-        </SortableContext>
-      </DndContext>
-    );
-  }
-
-  return (
-    <div
-      className="grid content-start gap-2"
-      style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}
-    >
-      {page.modules.map((m) => (
-        <div
-          key={m.id}
-          className="min-w-0"
-          style={{ gridColumn: `span ${m.colSpan}` }}
-        >
-          {renderModuleContent(m)}
-        </div>
-      ))}
-    </div>
-  );
+  return editMode
+    ? <EditableGrid pageId={pageId} />
+    : <PerformanceGrid pageId={pageId} />;
 });

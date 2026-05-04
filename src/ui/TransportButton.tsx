@@ -4,11 +4,13 @@
   - Momentary: fires onPress on pointerdown, onRelease on pointerup.
   - Latched: visual `active` prop reflects state; tap toggles via parent.
 
-  Visuals: pill-shaped glass button with accent glow when active or pressed.
+  Press visuals are imperative (data-pressed + CSS var) — no React state on
+  the press path, matching the Pad / piano-key idiom. The active prop still
+  flows through React because it's owned by performanceStore.
 */
 
 import type { PointerEvent as ReactPointerEvent, ReactNode } from 'react';
-import { memo, useState } from 'react';
+import { memo, useCallback, useRef } from 'react';
 import { useLearnable } from '@/ui/useLearnable';
 
 interface TransportButtonProps {
@@ -32,49 +34,52 @@ export const TransportButton = memo(function TransportButton({
   onRelease,
   onTap,
 }: TransportButtonProps) {
-  const [pressed, setPressed] = useState(false);
+  const ref = useRef<HTMLButtonElement | null>(null);
+  const pressed = useRef(false);
   const learn = useLearnable(controlId);
+
+  const setPressedVisual = useCallback((on: boolean): void => {
+    const el = ref.current;
+    if (!el) return;
+    if (on) el.dataset.pressed = '1';
+    else el.removeAttribute('data-pressed');
+  }, []);
 
   const handleDown = (e: ReactPointerEvent<HTMLButtonElement>): void => {
     if (learn.intercept(e)) return;
     e.preventDefault();
-    setPressed(true);
+    pressed.current = true;
+    setPressedVisual(true);
     onPress?.();
     onTap?.();
   };
 
   const handleUp = (): void => {
-    if (!pressed) return;
-    setPressed(false);
+    if (!pressed.current) return;
+    pressed.current = false;
+    setPressedVisual(false);
     onRelease?.();
   };
 
-  const glow = active || pressed;
-
   return (
     <button
+      ref={ref}
       type="button"
       data-control-id={controlId}
+      data-active={active ? '1' : undefined}
+      style={{ ['--btn-hue' as string]: String(hue) }}
       onPointerDown={handleDown}
       onPointerUp={handleUp}
       onPointerCancel={handleUp}
       onPointerLeave={handleUp}
       className={
-        'flex h-9 select-none items-center gap-2 rounded-md border border-borderSoft bg-surfaceLow px-3 ' +
-        'font-sans text-[11px] font-medium tracking-[0.08em] text-muted transition-[transform,box-shadow,color,background] duration-100 ' +
-        'active:scale-[0.97] ' +
-        (glow ? 'text-text bg-surfaceHi ' : 'hover:text-text hover:bg-surfaceHi ') +
+        'transport-btn ' +
         (learn.armed
           ? 'ring-2 ring-accent animate-pulse '
           : learn.learnMode
             ? 'ring-1 ring-accent/50 '
             : '')
       }
-      style={{
-        boxShadow: glow
-          ? `0 0 12px hsl(${hue} 88% 60% / 0.45), inset 0 0 0 1px hsl(${hue} 88% 60% / 0.4)`
-          : '',
-      }}
     >
       {icon && <span className="text-sm leading-none">{icon}</span>}
       <span>{label}</span>

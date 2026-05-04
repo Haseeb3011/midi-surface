@@ -62,9 +62,10 @@ export const Pad = memo(function Pad({
     if (!el) return;
     if (on) {
       el.dataset.active = '1';
-      el.style.setProperty('--pad-glow', glow.toFixed(3));
+      // Pass the float directly — CSS parses it; avoids toFixed() string alloc.
+      el.style.setProperty('--pad-glow', String(glow));
     } else {
-      delete el.dataset.active;
+      el.removeAttribute('data-active');
     }
   }, []);
 

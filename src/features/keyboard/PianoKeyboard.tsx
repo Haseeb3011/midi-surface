@@ -12,7 +12,7 @@
       cheap (no per-key event handlers, no React reconciliation).
 */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import { midi } from '@/features/midi-engine/MidiEngine';
 import { useSettingsStore } from '@/store/settingsStore';
@@ -99,19 +99,34 @@ export function PianoKeyboard() {
   const activePointers = useRef<Map<number, number>>(new Map());
   /** Refcount of how many pointers are holding a given note (for chords sharing a key). */
   const heldRefs = useRef<Map<number, number>>(new Map());
+  /** note -> DOM element. Rebuilt on layout change so setKeyVisual is O(1). */
+  const keyElements = useRef<Map<number, HTMLElement>>(new Map());
+  /** Cached container bounds — refreshed on pointerdown + ResizeObserver tick. */
+  const containerBounds = useRef<{ left: number; top: number; width: number; height: number }>(
+    { left: 0, top: 0, width: 0, height: 0 },
+  );
   const learn = useLearnable('piano:container');
 
-  // Track container width for responsive layout.
+  // Track container width for responsive layout. ResizeObserver is coalesced
+  // into one rAF tick so dnd-kit-driven width churn doesn't fire every frame.
   useEffect(() => {
     const el = wrapperRef.current;
     if (!el) return;
+    let pending = 0;
     const observer = new ResizeObserver((entries) => {
       const w = entries[0]?.contentRect.width ?? 0;
-      setContainerWidth(w);
+      if (pending) return;
+      pending = requestAnimationFrame(() => {
+        pending = 0;
+        setContainerWidth(w);
+      });
     });
     observer.observe(el);
     setContainerWidth(el.getBoundingClientRect().width);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      if (pending) cancelAnimationFrame(pending);
+    };
   }, []);
 
   const layout = useMemo(
@@ -119,14 +134,28 @@ export function PianoKeyboard() {
     [startOctave, octaves, containerWidth, height],
   );
 
-  // ---- Visual hot path (no React state) -----------------------------------
-  const setKeyVisual = useCallback((note: number, on: boolean): void => {
+  // After any layout change, rebuild the note→element index in one pass.
+  // Runs synchronously after render (before paint) so the first press of the
+  // new layout already has the cache populated.
+  useLayoutEffect(() => {
     const c = containerRef.current;
     if (!c) return;
-    const el = c.querySelector(`[data-note="${note}"]`) as HTMLElement | null;
+    const map = keyElements.current;
+    map.clear();
+    const nodes = c.querySelectorAll<HTMLElement>('[data-note]');
+    for (let i = 0; i < nodes.length; i++) {
+      const el = nodes[i]!;
+      const n = Number(el.dataset.note);
+      if (!Number.isNaN(n)) map.set(n, el);
+    }
+  }, [layout]);
+
+  // ---- Visual hot path (no React state, no DOM scan) ----------------------
+  const setKeyVisual = useCallback((note: number, on: boolean): void => {
+    const el = keyElements.current.get(note);
     if (!el) return;
     if (on) el.dataset.active = '1';
-    else delete el.dataset.active;
+    else el.removeAttribute('data-active');
   }, []);
 
   const acquireNote = useCallback(
@@ -157,19 +186,51 @@ export function PianoKeyboard() {
     [channel, setKeyVisual],
   );
 
-  // ---- Hit-testing --------------------------------------------------------
-  const noteFromTarget = (clientX: number, clientY: number): number | null => {
-    const el = document.elementFromPoint(clientX, clientY) as HTMLElement | null;
-    if (!el) return null;
-    const noteAttr = el.dataset.note;
-    if (!noteAttr) return null;
-    return Number(noteAttr);
-  };
+  // ---- Hit-testing (math-based, no DOM access during drag) ---------------
+  // Pointerdown refreshes containerBounds; pointermove uses cached bounds +
+  // the layout's pre-computed key positions to compute the hit note in O(b)
+  // where b = blacks count (≤ 35 for 7 octaves). No elementFromPoint, no
+  // synchronous layout flush.
+  const refreshBounds = useCallback((): void => {
+    const c = containerRef.current;
+    if (!c) return;
+    const r = c.getBoundingClientRect();
+    const b = containerBounds.current;
+    b.left = r.left;
+    b.top = r.top;
+    b.width = r.width;
+    b.height = r.height;
+  }, []);
+
+  const noteFromPoint = useCallback(
+    (clientX: number, clientY: number): number | null => {
+      const b = containerBounds.current;
+      const x = clientX - b.left;
+      const y = clientY - b.top;
+      if (x < 0 || x > b.width || y < 0 || y > b.height) return null;
+      // Black keys take precedence in the upper band.
+      if (y < layout.blackHeight) {
+        const blacks = layout.blacks;
+        for (let i = 0; i < blacks.length; i++) {
+          const k = blacks[i]!;
+          if (x >= k.x && x < k.x + k.width) return k.note;
+        }
+      }
+      // Whites are uniformly spaced: direct index.
+      if (layout.whiteWidth <= 0) return null;
+      let idx = Math.floor(x / layout.whiteWidth);
+      if (idx < 0) idx = 0;
+      if (idx >= layout.whites.length) idx = layout.whites.length - 1;
+      return layout.whites[idx]?.note ?? null;
+    },
+    [layout],
+  );
 
   const handlePointerDown = (e: ReactPointerEvent<HTMLDivElement>): void => {
     if (learn.intercept(e)) return;
     e.preventDefault();
-    const note = noteFromTarget(e.clientX, e.clientY);
+    refreshBounds();
+    const note = noteFromPoint(e.clientX, e.clientY);
     if (note === null) return;
     containerRef.current?.setPointerCapture(e.pointerId);
     activePointers.current.set(e.pointerId, note);
@@ -179,7 +240,7 @@ export function PianoKeyboard() {
   const handlePointerMove = (e: ReactPointerEvent<HTMLDivElement>): void => {
     const previous = activePointers.current.get(e.pointerId);
     if (previous === undefined) return;
-    const note = noteFromTarget(e.clientX, e.clientY);
+    const note = noteFromPoint(e.clientX, e.clientY);
     if (note === null || note === previous) return;
     releaseNote(previous);
     acquireNote(note);
