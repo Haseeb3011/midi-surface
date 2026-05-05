@@ -19,6 +19,16 @@ opt-level = "z"
 panic = "abort"
 strip = true
 
+# Dev-profile workaround for the GNU toolchain on Windows:
+# the unoptimized cdylib exports >65535 symbols, blowing past the PE export
+# ordinal limit (`error: export ordinal too large`). opt-level = 1 lets the
+# linker drop unused symbols below the limit while keeping debug info and
+# fast incremental rebuilds. Release builds are unaffected (already use
+# lto/strip).
+[profile.dev]
+opt-level = 1
+incremental = true
+
 [build-dependencies]
 tauri-build = { version = "2.5.6", features = [] }
 
