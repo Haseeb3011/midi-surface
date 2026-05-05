@@ -192,6 +192,10 @@ After `build.bat` completes:
 - NSIS installer: `C:\midi-build\release\bundle\nsis\MIDI Surface_*.exe` (~1.5 MB)
 - MSI installer: `C:\midi-build\release\bundle\msi\MIDI Surface_*.msi` (~2.2 MB)
 
+If MSI bundling fails with `Access is denied. (os error 5)` and `msiexec`
+is holding the old MSI, build into a fresh no-space target directory instead
+(for example `C:\midi-build-fresh`) and upload artifacts from that target.
+
 ### Performance / zero-alloc invariants — DO NOT REGRESS
 
 - `MidiEngine.send*()` methods reuse pre-allocated `Uint8Array(2)` and `Uint8Array(3)` buffers. Never allocate per-send.
@@ -304,6 +308,7 @@ Layered defenses, top to bottom:
 
 | Date | Change | By |
 |---|---|---|
+| 2026-05-05 | **Release-prep audit + fresh artifacts.** Read this context first, reviewed the Tauri release path, and found the existing MSI in `C:\midi-build` was stale from 2026-04-30 while the exe/NSIS were newer. A rebuild in `C:\midi-build` refreshed the exe and NSIS but MSI bundling failed with Windows `Access is denied. (os error 5)` because `msiexec` held the old MSI and could not be stopped from the current shell. Built successfully into `C:\midi-build-fresh` instead: standalone `midi-surface.exe` (4,247,552 bytes), NSIS `MIDI Surface_0.1.0_x64-setup.exe` (1,628,222 bytes), and MSI `MIDI Surface_0.1.0_x64_en-US.msi` (2,342,912 bytes), all timestamped 2026-05-05 19:48. Also aligned npm package metadata to `0.1.0` and added the missing PWA icon assets under `public/icons/` so the browser fallback manifest resolves. Validation: `npm run typecheck`, `npm run build`, and `npm run tauri:build` all green. Launched the fresh standalone exe for user testing. | Codex |
 | 2026-04-29 | Initial context file created with preliminary scope, open questions, and proposed stack. | Claude |
 | 2026-04-29 | Open questions resolved: FL+Ableton, loopMIDI, Brave, touch-enabled with gesture suppression, Latitude 7420 2-in-1 multi-monitor, PWA delivery, production use, Vital-inspired dynamic visuals, MIDI-only audio, full stack locked, resizable layout, no OBS. Locked plan written. | Claude |
 | 2026-04-29 | **Phase 0 — Scaffolding.** Vite+React+TS scaffold; Tailwind/ESLint/Prettier/strict TS configured; `touchSuppress.ts` installed at root; vite-plugin-pwa wired; Onboarding screen gates entry until `requestMIDIAccess` resolves. Bundle: 148 KB JS / 9.8 KB CSS. | Claude |
