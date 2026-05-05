@@ -8,6 +8,14 @@
 ; install fails, the in-app status pill takes over and prompts the user to
 ; install loopMIDI from the official site.
 
+!macro NSIS_HOOK_PREINSTALL
+  DetailPrint "Installing WebView2 loader DLL..."
+  ; The GNU Windows build emits WebView2Loader.dll next to the app binary.
+  ; The NSIS template copies only the main exe by default, so include the DLL
+  ; explicitly beside midi-surface.exe or the installed app fails at launch.
+  File "/oname=WebView2Loader.dll" "$%CARGO_TARGET_DIR%\release\WebView2Loader.dll"
+!macroend
+
 !macro NSIS_HOOK_POSTINSTALL
   DetailPrint "Installing loopMIDI (via winget)..."
   ; PowerShell wraps the winget call in try/catch so an exit code other
