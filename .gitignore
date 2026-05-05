@@ -50,3 +50,6 @@ target/
 
 # local launcher scripts — paths are user-machine-specific
 *.bat
+
+# AI session context — local only
+AI_CONTEXT.md
