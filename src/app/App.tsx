@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Onboarding } from '@/app/Onboarding';
 import { SettingsPanel } from '@/app/SettingsPanel';
+import { MidiStatus } from '@/app/MidiStatus';
+import { tryAutoStartLoopMidi } from '@/app/loopMidiAutoStart';
 import { ActivityMonitor } from '@/features/activity-monitor/ActivityMonitor';
 import { LayoutRenderer } from '@/features/layout/LayoutRenderer';
 import { PageTabs } from '@/features/layout/PageTabs';
@@ -33,19 +34,11 @@ async function toggleFullscreen(): Promise<void> {
 
 export function App() {
   const [status, setStatus] = useState<MidiSupportStatus | null>(null);
-  const [onboarded, setOnboarded] = useState<boolean>(
-    () => localStorage.getItem('onboarded') === '1',
-  );
   const [pane, setPane] = useState<Pane>('none');
   const [fs, setFs] = useState(isFullscreen);
 
   // Slim, granular store subscriptions — re-render only on the field that changes.
-  const outputId = useMidiStore((s) => s.outputId);
-  const outputName = useMidiStore(
-    (s) => s.ports.find((p) => p.id === s.outputId)?.name ?? 'No output',
-  );
   const theme = useSettingsStore((s) => s.theme);
-  const defaultChannel = useSettingsStore((s) => s.defaultChannel);
   const learnMode = useLearnStore((s) => s.learnMode);
   const toggleLearnMode = useLearnStore((s) => s.toggleLearnMode);
   const layout = useLayoutStore((s) => s.layout);
@@ -74,6 +67,10 @@ export function App() {
         if (restoredOut) useMidiStore.getState().setOutput(restoredOut);
         if (restoredIn) useMidiStore.getState().setInput(restoredIn);
         useMidiStore.getState().refreshPorts();
+        // Best-effort: if no output port appears on its own, try to launch
+        // loopMIDI from its known install path. Silent no-op when not under
+        // Tauri or when loopMIDI isn't installed.
+        void tryAutoStartLoopMidi();
       }
     })();
     void bootstrapLayoutStore();
@@ -104,39 +101,24 @@ export function App() {
     return () => document.removeEventListener('fullscreenchange', handler);
   }, []);
 
-  const handleContinue = (): void => {
-    localStorage.setItem('onboarded', '1');
-    setOnboarded(true);
-  };
+  // Stale `onboarded` localStorage key from earlier versions — clean up so
+  // it doesn't linger in user storage forever.
+  useEffect(() => {
+    if (localStorage.getItem('onboarded') !== null) {
+      localStorage.removeItem('onboarded');
+    }
+  }, []);
 
-  if (!onboarded || status?.state !== 'granted') {
-    return (
-      <Onboarding
-        status={status}
-        onContinue={handleContinue}
-        onStatusChange={(s) => {
-          setStatus(s);
-          if (s.state === 'granted') {
-            bootstrapMidiStore();
-            useMidiStore.getState().refreshPorts();
-          }
-        }}
-      />
-    );
-  }
+  // No splash gate — the app shell renders immediately. Status (granted /
+  // denied / no port) is reflected inline by <MidiStatus />, which also
+  // handles the recovery actions we used to show in the Onboarding screen.
 
   return (
     <div className="app-shell relative flex h-full w-full flex-col overflow-hidden">
       {/* Header */}
       <header className="flex shrink-0 items-center gap-4 border-b border-borderSoft/60 px-4 py-2.5">
-        {/* Left: status dot + title */}
+        {/* Left: title only — port status moved into <MidiStatus /> */}
         <div className="flex shrink-0 items-center gap-2.5">
-          <div
-            className={
-              'h-2.5 w-2.5 rounded-full transition ' +
-              (outputId ? 'bg-ok shadow-[0_0_10px_rgb(var(--ok)/0.7)]' : 'bg-warn')
-            }
-          />
           <h1 className="font-mono text-[12px] font-semibold tracking-[0.22em] text-text/90">MIDI SURFACE</h1>
         </div>
 
@@ -145,14 +127,9 @@ export function App() {
           <PageTabs />
         </div>
 
-        {/* Right: port info + action buttons */}
+        {/* Right: live MIDI status + action buttons */}
         <div className="flex shrink-0 items-center gap-1.5">
-          <span className="flex h-8 items-center rounded-md bg-surfaceHi/40 px-2.5 font-mono text-[10px] uppercase tracking-[0.12em] text-muted">
-            out:&nbsp;<span className="text-text">{outputName}</span>
-          </span>
-          <span className="flex h-8 items-center rounded-md bg-surfaceHi/40 px-2.5 font-mono text-[10px] uppercase tracking-[0.12em] text-muted">
-            ch{defaultChannel + 1}
-          </span>
+          <MidiStatus status={status} onStatusChange={setStatus} />
           <button
             type="button"
             onPointerDown={(e) => {
