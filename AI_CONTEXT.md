@@ -1,376 +1,347 @@
 # AI Context — MIDI Surface
 
-> **Living document.** Read this at the start of every session. Update it whenever scope, decisions, conventions, or context change. Stamp the changelog (§14) with the date.
+> **Living document. Read end-to-end at every session start. Update §14 changelog whenever scope, decisions, conventions, or context change.**
 
 ---
 
-## 1. Elevator pitch
+## 1. Pitch
 
-**MIDI Surface** is a Vital-synth-inspired, touch-first MIDI control surface that ships as a **lightweight Windows desktop app** (Tauri 2, ~4 MB standalone exe). It runs in a WebView2 window on a Windows 2-in-1 touchscreen, sends MIDI through **loopMIDI** (a virtual MIDI port) to FL Studio / Ableton Live, and includes pads, piano keyboard, knobs, faders, pitch + mod wheels, transport, MIDI Learn, and an activity monitor. The same React app also runs as a PWA in any Chromium browser as a fallback.
+**MIDI Surface** — Vital-synth-inspired touch MIDI control surface. Ships as a lightweight Windows desktop app (Tauri 2, ~4 MB exe) running in WebView2, sending MIDI through **loopMIDI** to FL Studio / Ableton. Same React app runs as a PWA browser fallback. Modules: pads, piano, knobs, faders, pitch + mod wheels, transport, MIDI Learn, activity monitor.
 
 Repo: <https://github.com/Haseeb3011/midi-surface> (private).
 
 ## 2. User profile
 
-- **GitHub:** `Haseeb3011`
-- **Email:** `haseeb309786@gmail.com`
-- **OS:** Windows 11 Pro
-- **Hardware:** Dell Latitude 7420 2-in-1 (touchscreen). Multi-monitor — app on the touchscreen, DAW on the secondary display.
+- **GitHub:** `Haseeb3011` · **Email:** `haseeb309786@gmail.com`
+- **OS:** Windows 11 Pro · **HW:** Dell Latitude 7420 2-in-1 touchscreen, multi-monitor (app on touchscreen, DAW on secondary)
 - **No external MIDI hardware.** App is the sole controller.
-- **DAWs in use:** FL Studio + Ableton Live.
-- **Browser:** Brave (Chromium). Note: Brave disables Web MIDI by default — the WebView2 inside the Tauri app does NOT have this restriction, but the browser fallback path requires `brave://settings/content/midi` to be allowed.
+- **DAWs:** FL Studio + Ableton Live · **Browser:** Brave (Web MIDI must be allowed at `brave://settings/content/midi` for browser fallback only)
 - **Project root:** `C:\Users\hasee\Documents\App Projects\MIDI Project`
-- **Skill level:** Builds creative tools / works with DAWs. Comfortable with technical decisions but trusts the assistant to pick "what's best" when given options.
+- Builds creative tools, comfortable with technical decisions, trusts the assistant to pick "what's best" when given options.
 
 ## 3. Hard constraints
 
-- Must be a **lightweight desktop app** with **no perceptible lag** during play. Performance is a first-class concern.
-- Must control a running DAW on the secondary screen.
-- Must be **full of features** and **highly customizable / dynamic**.
-- Must have **modern visuals** (Vital-inspired with dynamic colors).
-- Must **ignore browser + Windows gestures** so they don't hijack pad presses or chord playing.
-- Plan / feature list must be presented and approved **before any execution**.
-- This file (`AI_CONTEXT.md`) must be **kept up to date** every time something material changes.
-- The Git repo must be **kept up to date** — see §7 for the workflow.
+- Lightweight desktop app, **no perceptible lag** during play. Performance is first-class.
+- Controls a running DAW on the secondary screen.
+- Feature-rich, highly customizable / dynamic.
+- Modern Vital-inspired visuals.
+- **Ignore browser + Windows gestures** so they don't hijack pad presses or chords.
+- **Plan presented and approved before any execution** (see §13).
+- This file kept up to date on every material change.
+- Git repo updated **only on explicit user instruction** (see §7).
 
 ## 4. Confirmed decisions
 
 | # | Decision | Value | Date |
 |---|---|---|---|
 | 1 | Target DAWs | FL Studio + Ableton Live | 2026-04-29 |
-| 2 | Virtual MIDI | loopMIDI; one-click download via in-app onboarding | 2026-04-29 |
+| 2 | Virtual MIDI | loopMIDI; auto-installed via NSIS+winget; auto-launched at boot | 2026-04-29 / -05-05 |
 | 3 | Browser fallback | Brave / Chrome / Edge (Chromium) | 2026-04-29 |
-| 4 | Touch input | Touch ENABLED. Suppress only browser + Windows gesture defaults — pinch-zoom, double-tap zoom, swipe-back, pull-to-refresh, long-press context menu, edge swipes. **Do NOT** preventDefault on `touchstart` (it cancels equivalent `pointerdown` events and breaks chord playing). | 2026-04-29 |
+| 4 | Touch input | Touch ENABLED. Suppress browser+Windows gesture defaults (pinch-zoom, double-tap zoom, swipe-back, pull-to-refresh, long-press menu, edge swipes). **DO NOT** preventDefault on `touchstart` (cancels equivalent `pointerdown` and breaks chords). | 2026-04-29 |
 | 5 | Hardware target | Dell Latitude 7420 2-in-1 touchscreen, multi-monitor | 2026-04-29 |
-| 6 | Delivery | **Tauri 2 desktop app** (primary) + PWA fallback (browser). Standalone `.exe` ~4 MB, NSIS installer ~1.5 MB. Same React code drives both. | 2026-04-30 |
-| 7 | Use case | Production-grade (built for production from day one) | 2026-04-29 |
-| 8 | Visual style | Vital-synth-inspired — dark base, glowing controls, animated gradients, dynamic colors that morph with activity | 2026-04-29 |
-| 9 | Audio preview | Pure MIDI-out only for v1. Tone.js can be added later. | 2026-04-29 |
-| 10 | Tech stack | React 18 + TypeScript + Vite + Tailwind + Framer Motion + Zustand + Dexie + dnd-kit + Tauri 2 + WebView2 + Rust GNU + MinGW. | 2026-04-29 / -30 |
-| 11 | Layout | Fully resizable + draggable modules (dnd-kit, scheduled for Phase 4). | 2026-04-29 |
+| 6 | Delivery | **Tauri 2 desktop app** (primary) + PWA fallback. Standalone exe ~4 MB, NSIS installer ~1.5 MB. | 2026-04-30 |
+| 7 | Use case | Production-grade from day one | 2026-04-29 |
+| 8 | Visual style | Vital-inspired — dark base, glowing controls, animated gradients, dynamic activity-driven colors | 2026-04-29 |
+| 9 | Audio preview | Pure MIDI-out only for v1. Tone.js deferred. | 2026-04-29 |
+| 10 | Tech stack | React 18 + TS + Vite + Tailwind + Framer Motion + Zustand + Dexie + dnd-kit + Tauri 2 + WebView2 + Rust GNU + MinGW. | 2026-04-29 / -30 |
+| 11 | Layout | Fully resizable + draggable modules (dnd-kit, Phase 4) | 2026-04-29 |
 | 12 | OBS overlay | Skipped for v1. Revisit only if trivial. | 2026-04-29 |
 | 13 | Code signing | Skipped (SmartScreen "Run anyway" once is acceptable) | 2026-04-30 |
-| 14 | Repo | Private GitHub repo at `Haseeb3011/midi-surface`, branch `main` | 2026-04-30 |
+| 14 | Repo | Private GitHub repo `Haseeb3011/midi-surface`, branch `main` | 2026-04-30 |
+| 15 | MIDI transport | **WinMM-only** on desktop (Rust `native_midi.rs` → `midiOutShortMsg`). Web MIDI used only for inputs (Learn / Activity Monitor) on desktop, and for both on browser PWA. WebView2's Web MIDI output enumeration is unreliable. | 2026-05-06 |
 
 ## 5. Tech stack (locked)
 
 | Concern | Choice |
 |---|---|
-| Frontend framework | React 18 + TypeScript (strict) |
-| Build tool | Vite 5 (`vite-plugin-pwa` for browser fallback only — disabled under Tauri) |
-| Desktop shell | **Tauri 2** with WebView2 (Chromium-based, system-shared on Windows 11) |
-| Rust toolchain | Stable 1.95+, **GNU host** (`x86_64-pc-windows-gnu`) installed via `rustup` |
-| C/C++ tools | **MinGW-w64** at `C:\ProgramData\mingw64\mingw64\bin` (installed via `choco install mingw -y`) — provides `gcc`, `dlltool`, `binutils` |
+| Frontend | React 18 + TypeScript (strict) |
+| Build | Vite 5 (vite-plugin-pwa for browser fallback only — disabled under Tauri) |
+| Desktop shell | **Tauri 2** + WebView2 (system-shared, Win11) |
+| Rust toolchain | Stable 1.95+, **GNU host** (`x86_64-pc-windows-gnu`) via `rustup` |
+| C/C++ | **MinGW-w64** at `C:\ProgramData\mingw64\mingw64\bin` (`choco install mingw -y`) |
 | Styling | TailwindCSS 3 + CSS custom properties (live theme tokens) |
-| Animation | Framer Motion (UI). GSAP / pixi.js available for high-FPS visuals if ever needed. |
-| State | Zustand 4 + `persist` middleware with debounced localStorage |
-| Persistence | Debounced localStorage for settings; Dexie (IndexedDB) for presets (Phase 4) |
-| Drag/resize | `dnd-kit` (already installed; used in Phase 4) |
-| MIDI | Native Web MIDI API via the custom `MidiEngine` wrapper (zero-allocation hot path) |
-| Hotkeys | `react-hotkeys-hook` (already installed) |
-| Tests | Vitest (planned) + Playwright (planned) |
+| Animation | Framer Motion (UI). GSAP / pixi.js available if ever needed for high-FPS visuals. |
+| State | Zustand 4 + `persist` w/ debounced localStorage |
+| Persistence | Debounced localStorage (settings); Dexie (IndexedDB) for presets |
+| Drag / resize | `dnd-kit` |
+| MIDI (desktop output) | **WinMM** via `src-tauri/src/native_midi.rs` (`midiOutOpen`/`midiOutShortMsg`), bridge in `src/app/nativeMidi.ts` |
+| MIDI (input + browser output) | Native Web MIDI API via `MidiEngine` (zero-allocation hot path) |
+| Hotkeys | `react-hotkeys-hook` |
+| Tests | Vitest + Playwright (planned) |
 | Lint / format | ESLint 8 + Prettier 3 + `prettier-plugin-tailwindcss` |
 
 ## 6. MIDI routing pipeline
 
 ```
 [MIDI Surface — React app inside Tauri WebView2]
-      │ Web MIDI API (out.send(Uint8Array))
+      │ Output:  Tauri invoke → WinMM (midiOutShortMsg)   ← desktop
+      │          MIDIOutput.send(Uint8Array)              ← browser PWA
+      │ Input:   Web MIDI (in-process)                    ← both
       ▼
 [loopMIDI — virtual MIDI port on Windows]
       │
       ▼
-[DAW listening on that port — FL Studio / Ableton Live]
+[FL Studio / Ableton Live]
 ```
 
-User installs loopMIDI once. The in-app onboarding launches the loopMIDI download page via the Tauri shell plugin and auto-detects the new port on focus regain.
+loopMIDI installed silently via NSIS+winget on first install; auto-launched on boot if not running. Header status pill reports live state with recovery actions (start, refresh, download).
 
 ## 7. Git workflow & repo upkeep
 
-**Repo:** `git@github.com:Haseeb3011/midi-surface.git` / `https://github.com/Haseeb3011/midi-surface` (private).
+**Repo:** `git@github.com:Haseeb3011/midi-surface.git` (private). **Branch:** `main`.
 
-**Branch:** `main` (sole branch unless features get long enough to warrant feature branches).
-
-**Author identity** is set per-commit via env vars — never via `git config --global` — so the user's machine-wide config is left untouched:
+**Author identity** is set per-commit via env vars — never `git config --global`:
 
 ```bash
-GIT_AUTHOR_NAME="Haseeb3011" \
-GIT_AUTHOR_EMAIL="haseeb309786@gmail.com" \
-GIT_COMMITTER_NAME="Haseeb3011" \
-GIT_COMMITTER_EMAIL="haseeb309786@gmail.com" \
+GIT_AUTHOR_NAME="Haseeb3011" GIT_AUTHOR_EMAIL="haseeb309786@gmail.com" \
+GIT_COMMITTER_NAME="Haseeb3011" GIT_COMMITTER_EMAIL="haseeb309786@gmail.com" \
 git commit -m "..."
 ```
 
-### When to commit
+### **Push policy — STRICT**
+
+- **Never push, force-push, or upload to GitHub without an explicit user instruction.** Local commits are fine; remote sync is gated.
+- When the user instructs "push" / "upload" / "update GitHub" / "ship":
+  1. Push commits to `origin/main`.
+  2. **Also update the GitHub release** for the current `package.json` version: rebuild if not already fresh, then upload `midi-surface.exe`, `MIDI Surface_<ver>_x64-setup.exe` (NSIS), and `MIDI Surface_<ver>_x64_en-US.msi` (if built) via `gh release upload <tag> <files> --clobber` (or `gh release create <tag> <files>` if the tag doesn't exist). Use the version from `package.json` and tag `v<version>`.
+- Never bypass hooks (`--no-verify`) or signing flags unless explicitly asked.
+- Never modify global git config.
+
+### Commit cadence (local)
 
 Commit at meaningful checkpoints, not every edit:
+- After each sub-phase passes typecheck + build.
+- After a focused, tested bug fix.
+- After updating `AI_CONTEXT.md`.
+- Before a risky refactor (known-good baseline).
 
-- **After each sub-phase completes and smoke tests pass** (typecheck + build green). One commit per sub-phase keeps history readable.
-- **After a focused bug fix** that's tested and working.
-- **After updating `AI_CONTEXT.md`** with new decisions or scope.
-- **Before starting a risky refactor** so we have a known-good baseline to revert to.
-
-Do **NOT** commit:
-- Mid-refactor work that doesn't typecheck.
-- Build artifacts (`dist/`, `dev-dist/`, `target/`, `C:\midi-build\` — already gitignored).
-- Anything with secrets, tokens, or credentials.
+Don't commit: mid-refactor work that doesn't typecheck; build artifacts (`dist/`, `dev-dist/`, `target/`, `C:\midi-build\`); secrets/tokens.
 
 ### Commit message convention
 
-- One-line subject (under 72 chars), imperative mood (e.g. "Add layout editor with snap-grid").
-- Blank line, then a short body explaining the *why* + any non-obvious decisions.
-- End with `Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>`.
-- Use HEREDOC for multi-line messages to preserve formatting:
+One-line subject (<72 chars, imperative). Blank line. Short body explaining *why* + non-obvious decisions. End with `Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>`. Use HEREDOC for multi-line messages.
 
-```bash
-git commit -m "$(cat <<'EOF'
-Subject line under 72 chars
+### Pre-work checklist (every session)
 
-Body paragraph explaining the why and any tricky decisions.
-Bullet points for separable items.
-
-Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>
-EOF
-)"
-```
-
-### Push cadence
-
-- **Push after every commit** to keep the remote in sync (`git push`).
-- The repo is private; force-pushing to `main` without an explicit user ask is forbidden.
-- Never bypass hooks (`--no-verify`) or signing flags unless the user explicitly asks.
-
-### Pre-work checklist
-
-At the start of any new work session:
-
-1. `git status` — confirm a clean working tree.
-2. `git pull --rebase` — sync with remote in case the user pushed from another machine.
-3. Read this file (§14 changelog + §11 phase plan) to know where things stand.
+1. `git status` — confirm clean tree.
+2. `git pull --rebase` — sync from remote.
+3. Read this file (§3 constraints, §8 invariants, §11 phases, §14 changelog, §15 open questions).
 
 ### `gh` operations
 
-The user has GitHub CLI (`gh`) authenticated as `Haseeb3011` with `repo`, `gist`, `read:org`, and `workflow` scopes — use it for issues / PRs / releases when appropriate (e.g., `gh issue create`, `gh release create v0.2.0 --notes "..."`).
+User has `gh` authenticated as `Haseeb3011` (`repo`, `gist`, `read:org`, `workflow`). Use for issues / PRs / releases when explicitly requested.
 
 ## 8. Build environment & gotchas
 
-### Required tools (already installed on user's machine)
+### Required tools (already installed)
 
 | Tool | Where | Purpose |
 |---|---|---|
-| Node.js 25 + npm 11 | system PATH | Vite + React build |
-| Rust 1.95 stable, GNU toolchain | `~/.cargo/bin` | Tauri Rust shell |
-| MinGW-w64 | `C:\ProgramData\mingw64\mingw64\bin` | `dlltool` + binutils for the GNU toolchain |
-| WebView2 | built into Windows 11 | Browser engine the Tauri app embeds |
-| GitHub CLI | system PATH | `gh repo create`, `gh issue`, etc. |
-| Chocolatey | `~\AppData\Local\UniGetUI\Chocolatey\bin` | for installing Windows packages |
+| Node 25 + npm 11 | system PATH | Vite + React build |
+| Rust 1.95 stable, GNU | `~/.cargo/bin` | Tauri Rust shell |
+| MinGW-w64 | `C:\ProgramData\mingw64\mingw64\bin` | `dlltool` + binutils |
+| WebView2 | built into Win11 | Browser engine the Tauri app embeds |
+| `gh` CLI | system PATH | issues / PRs / releases |
+| Chocolatey | `~\AppData\Local\UniGetUI\Chocolatey\bin` | Windows packages |
 
 ### `CARGO_TARGET_DIR=C:\midi-build` is required
 
-`binutils` `dlltool.exe` cannot handle paths containing spaces. The project lives at `C:\Users\hasee\Documents\App Projects\MIDI Project` (note "App Projects"). Without redirecting the cargo target dir, `cargo build` fails with `can't open Projects\MIDI for reading: No such file or directory`.
+`dlltool.exe` cannot handle paths containing spaces. Project lives at `C:\Users\hasee\Documents\App Projects\MIDI Project` (note "App Projects"). Without redirecting cargo target dir, build fails with `can't open Projects\MIDI for reading`.
 
-The launcher scripts (`dev.bat`, `build.bat`) set this automatically. If running cargo manually from a shell, prepend:
+`run.bat` / `dev.bat` / `build.bat` (gitignored) set this automatically. From a shell, prepend:
 
 ```bash
 export PATH="$HOME/.cargo/bin:/c/ProgramData/mingw64/mingw64/bin:$PATH"
 export CARGO_TARGET_DIR="C:/midi-build"
 ```
 
-### Launcher scripts
+### Launcher scripts (local-only, gitignored)
 
-| Script | What it does |
+| Script | Action |
 |---|---|
-| `run.bat` | Smart launcher — runs `C:\midi-build\release\midi-surface.exe` if it exists, else falls back to `dev.bat`. |
-| `dev.bat` | `npm run tauri:dev` — Vite + Tauri WebView with hot reload. Compiles src-tauri on first run. |
-| `build.bat` | `npm run tauri:build` — produces standalone `.exe`, NSIS installer, MSI installer. Opens the bundle folder when done. |
+| `run.bat` | Smart launcher — runs `C:\midi-build\release\midi-surface.exe` if it exists, else falls back to `dev.bat` |
+| `dev.bat` | `npm run tauri:dev` (Vite + Tauri WebView, hot reload) |
+| `build.bat` | `npm run tauri:build` — produces `.exe`, NSIS, MSI; opens bundle folder |
 
 ### Build output paths
 
-After `build.bat` completes:
-
+After `build.bat`:
 - Standalone: `C:\midi-build\release\midi-surface.exe` (~4 MB)
-- NSIS installer: `C:\midi-build\release\bundle\nsis\MIDI Surface_*.exe` (~1.5 MB)
-- MSI installer: `C:\midi-build\release\bundle\msi\MIDI Surface_*.msi` (~2.2 MB)
+- NSIS installer: `C:\midi-build\release\bundle\nsis\MIDI Surface_<ver>_x64-setup.exe` (~1.5 MB)
+- MSI installer: `C:\midi-build\release\bundle\msi\MIDI Surface_<ver>_x64_en-US.msi` (~2.2 MB)
 
-If MSI bundling fails with `Access is denied. (os error 5)` and `msiexec`
-is holding the old MSI, build into a fresh no-space target directory instead
-(for example `C:\midi-build-fresh`) and upload artifacts from that target.
+If MSI bundling fails with `Access is denied. (os error 5)` (msiexec holding old MSI), build into a fresh no-space target dir like `C:\midi-build-fresh` instead.
 
-GNU Windows builds emit `WebView2Loader.dll` beside `midi-surface.exe`.
-NSIS does not copy that sibling DLL automatically, so
-`src-tauri/windows/installer-hooks.nsh` includes it explicitly during
-`NSIS_HOOK_PREINSTALL`. Do not remove that hook unless the app is switched to
-a build mode that no longer needs the loader DLL.
+### NSIS hooks (`src-tauri/windows/installer-hooks.nsh`)
 
-loopMIDI ports exist only while `loopMIDI.exe` is running. Do not rely solely
-on Web MIDI `onstatechange` after auto-starting loopMIDI; refresh the MIDI port
-list explicitly while waiting for the port to appear.
+- `NSIS_HOOK_PREINSTALL`: copies `WebView2Loader.dll` from the cargo release dir to `$INSTDIR`. **Do not remove** unless switching off GNU Windows builds.
+- `NSIS_HOOK_POSTINSTALL`: silently installs loopMIDI via `winget install -e --id TobiasErichsen.loopMIDI`; seeds `%APPDATA%\loopMIDI\loopMIDI.cfg` with a default `MIDI Surface` port iff none exists.
 
-Do not bundle the loopMIDI binary directly unless Tobias Erichsen grants
-redistribution permission. The official pages describe loopMIDI/virtualMIDI as
-copyrighted software, and no redistribution license has been confirmed.
+### MIDI architecture invariants
 
-WebView2 may report Web MIDI access as granted while still returning zero MIDI
-outputs. The desktop app therefore has a Windows-native MIDI output fallback:
-Rust commands in `src-tauri/src/native_midi.rs` enumerate WinMM outputs
-(`midiOutGetNumDevs` / `midiOutGetDevCapsW`), keep an open `midiOutOpen`
-handle for the selected device, and send short messages via `midiOutShortMsg`.
-Frontend native ports are exposed as `native:<id>` and are selected/sent
-through `src/app/nativeMidi.ts` from `MidiEngine`.
+- **Desktop output** is exclusively WinMM (`src-tauri/src/native_midi.rs`). Web MIDI outputs are never enumerated or sent to under Tauri — WebView2's Web MIDI output enumeration has been observed to silently return zero ports.
+- **Browser output** is Web MIDI only.
+- **Inputs** (MIDI Learn, Activity Monitor capture) always go through Web MIDI; on desktop, failure to acquire `MIDIAccess` is non-fatal — outputs still work.
+- Native output ids use `native:<n>` prefix; Web MIDI ids use the browser's own port id strings. `bootstrapMidiStore` auto-selects the first port whose name matches `/loop|midi surface/i` when the persisted id is stale.
+
+### loopMIDI redistribution
+
+Do **not** bundle the loopMIDI binary directly. Tobias Erichsen's loopMIDI/virtualMIDI pages do not confirm a redistribution license. Stick with NSIS+winget install + auto-launch.
 
 ### Performance / zero-alloc invariants — DO NOT REGRESS
 
-- `MidiEngine.send*()` methods reuse pre-allocated `Uint8Array(2)` and `Uint8Array(3)` buffers. Never allocate per-send.
-- The broadcast path is **listener-gated** — `if (this.eventListeners.size === 0) return` before doing any event work. During normal play (no Activity Monitor open, Learn off), zero observers means zero allocations and zero React re-renders.
-- The learn listener in `App.tsx` only attaches when `learnMode` is true (`useEffect` dep `[learnMode]`).
-- Piano key visuals are toggled imperatively (`data-active='1'` attribute + CSS in `globals.css`). No React state on press / release / glide.
-- Pad press visuals are also imperative — `data-active` + `--pad-glow` CSS var, no React state.
-- All persisted Zustand stores (`settingsStore`, `learnStore`, `performanceStore`) use `debouncedLocalStorage(300)` from `src/persistence/debouncedStorage.ts` — never the default storage. This prevents the synchronous localStorage write from happening on every drag tick.
-- Knob / Fader rows are split into per-control `KnobControl` / `FaderControl` components that subscribe to their own slot only.
-- All UI primitives (`Pad`, `Knob`, `Fader`, `Wheel`, `TransportButton`) and feature modules (`PadGrid`, `KnobRow`, `FaderRow`, `Wheels`, `Transport`, `ActivityMonitor`) are wrapped in `React.memo`.
+- `MidiEngine.send*()` reuses pre-allocated `Uint8Array(2)` and `Uint8Array(3)` buffers (browser path). Never allocate per-send.
+- Broadcast path is **listener-gated** — `if (this.eventListeners.size === 0) return` before any event work. During normal play (Activity Monitor closed, Learn off), zero observers means zero allocations and zero React re-renders.
+- Learn listener attaches only when `learnMode` is true (`useEffect` dep `[learnMode]`).
+- Piano key, pad, transport-button visuals are toggled imperatively (`data-active` / `data-pressed` attributes + CSS). No React state on press / release / glide.
+- All persisted Zustand stores (`settingsStore`, `learnStore`, `performanceStore`) use `debouncedLocalStorage(300)` — never default storage.
+- Knob / Fader rows split into per-control components subscribing to their own slot only.
+- All UI primitives (`Pad`, `Knob`, `Fader`, `Wheel`, `TransportButton`) and feature modules wrapped in `React.memo`.
+- `layoutStore.moduleIndex: Map<id, ModuleInstance>` rebuilt on every mutation; override lookups are O(1).
+- Piano key DOM cached as `Map<note, HTMLElement>` rebuilt in `useLayoutEffect`; hit-testing is math-based (no `elementFromPoint`).
 
-## 9. Touch / gesture suppression strategy
+## 9. Touch / gesture suppression
 
-Layered defenses, top to bottom:
+Layered defenses:
 
-1. **CSS:** `touch-action: none`, `overscroll-behavior: none`, `user-select: none` on `html` / `body` in `src/styles/globals.css`.
-2. **Viewport meta:** `user-scalable=no, maximum-scale=1, viewport-fit=cover` in `index.html`.
-3. **JS event suppression** in `src/input/touchSuppress.ts`:
-   - `gesturestart` / `gesturechange` / `gestureend` → `preventDefault`.
-   - `contextmenu` → `preventDefault` unless `[data-allow-context]`.
-   - `wheel` with `ctrlKey` / `metaKey` → `preventDefault` (zoom).
-   - `dblclick` → `preventDefault` (zoom).
-   - `selectstart` / `dragstart` → `preventDefault` outside opt-in elements.
-   - `keydown` Ctrl/Meta + `=` / `+` / `-` / `0` → `preventDefault`.
-   - **DO NOT** preventDefault on `touchstart` / `touchmove` — the spec says that cancels the equivalent `pointerdown` and silently breaks chord playing.
-4. **PWA / Tauri standalone**: no browser chrome, no edge-swipe-back, no tab strip.
-5. **OS-level (Windows touchscreen 3-finger gestures)**: cannot be intercepted from a webpage. Mitigation: run the Tauri app fullscreen (F11) and disable Windows touchpad multi-finger gestures via `Settings → Bluetooth & devices → Touchpad`. For touchscreen-specific gestures, check Dell SupportAssist / Synaptics control panel.
+1. **CSS:** `touch-action: none`, `overscroll-behavior: none`, `user-select: none` on `html` / `body` (`src/styles/globals.css`).
+2. **Viewport meta:** `user-scalable=no, maximum-scale=1, viewport-fit=cover` (`index.html`).
+3. **JS** (`src/input/touchSuppress.ts`):
+   - `gesturestart/change/end` → preventDefault.
+   - `contextmenu` → preventDefault unless `[data-allow-context]`.
+   - `wheel` w/ ctrl/meta → preventDefault (zoom).
+   - `dblclick` → preventDefault.
+   - `selectstart`, `dragstart` → preventDefault outside opt-in.
+   - `keydown` ctrl/meta + `=`/`+`/`-`/`0` → preventDefault.
+   - **Never** preventDefault on `touchstart`/`touchmove` — cancels equivalent `pointerdown` and breaks chords.
+4. PWA / Tauri standalone: no browser chrome, no edge-swipe-back, no tab strip.
+5. **OS-level**: cannot be intercepted from a webpage. Mitigation: run fullscreen (F11) and disable Windows touchpad multi-finger gestures via Settings → Bluetooth & devices → Touchpad. For touchscreen-specific gestures, check Dell SupportAssist / Synaptics control panel.
 
-## 10. UI / UX principles
+## 10. UI/UX principles
 
-- **Performance-grade responsiveness.** Click-to-MIDI-emit must stay sub-10 ms.
-- **No accidental triggers.** Pad presses don't navigate, scroll, or zoom.
-- **Modular layout.** Every module is a self-contained, MIDI-Learn-aware widget; in Phase 4 they become draggable / resizable.
-- **Themeability is first-class**, not a postscript.
-- **Onboarding gates entry.** Until Web MIDI is granted AND a virtual MIDI port is detected, the user is on the onboarding screen.
-- **Default-friendly MIDI map.** Pads on channel 10 (drum), CCs grouped (knobs 16–23, faders 20–27, transport 115–119), so MIDI Learn in any DAW is one tap.
+- **Performance-grade responsiveness** — click-to-MIDI-emit < 10 ms.
+- **No accidental triggers** — pad presses don't navigate, scroll, or zoom.
+- **Modular layout** — every module is self-contained, MIDI-Learn-aware, draggable + resizable in edit mode.
+- **Themeability is first-class.**
+- **No splash gate** — surface renders immediately. `<MidiStatus />` reports loopMIDI state inline in the header with one-click recovery.
+- **Default-friendly MIDI map** — pads ch10 / knobs CC 16–23 / faders CC 20–27 / transport CC 115–119 (one-tap MIDI Learn in any DAW).
 
 ## 11. Phase plan & current status
 
 ### ✅ Done
-
-- **Phase 0** — Scaffolding (Vite + React + TS + Tailwind, touch suppression, PWA manifest)
+- **Phase 0** — Scaffolding (Vite/React/TS/Tailwind, touch suppression, PWA manifest)
 - **Phase 1** — MIDI core (`MidiEngine`, port enumeration, hot-plug, MIDI Learn, activity monitor, QWERTY fallback)
-- **Phase 2** — Performance modules (pads, piano, knobs, faders, pitch + mod wheels, transport with tap-tempo)
+- **Phase 2** — Performance modules (pads, piano, knobs, faders, pitch+mod wheels, transport with tap-tempo)
 - **Phase 2.1** — Chord robustness + responsive resizable keyboard
 - **Phase 2.2** — Chord-killer fix (don't preventDefault touchstart) + perf overhaul (debounced storage, imperative piano, React.memo, per-control subscriptions)
-- **Phase 2.3** — Zero-allocation MIDI hot path (pre-allocated send buffers, listener-gated broadcast, imperative Pad press)
-- **Phase 3** — Tauri 2 desktop app (4 MB standalone exe, 1.5 MB NSIS installer, in-app loopMIDI download flow)
+- **Phase 2.3** — Zero-allocation MIDI hot path (pre-allocated send buffers, listener-gated broadcast, imperative pad press)
+- **Phase 3** — Tauri 2 desktop app (4 MB exe, 1.5 MB NSIS, in-app loopMIDI download)
 - **Phase 4** — Customization: drag-and-drop layout editor, multi-page tabs, Dexie preset store, per-control overrides, JSON import/export
-- **Phase 4.7** — UI refinement & 5-theme system: full design-token rewrite (12 color tokens × 5 themes, radius/spacing/elevation scales), `.module-panel` / `.header-btn` shared utilities, refined primitives (thinner knob arc, slimmer fader/wheel, dim-by-default pads), LANDR-inspired flat-surface aesthetic, theme picker with swatches
-- **Phase 4.8** — Performance optimization: piano key DOM Map cache (O(1) visual update), math-based piano hit-testing (no `elementFromPoint`), `layoutStore.moduleIndex` for O(1) override lookup, stable selectors, in-place performanceStore mutation, split `PerformanceGrid` / `EditableGrid` so dnd-kit only mounts in edit mode, imperative TransportButton press
-- **Phase 4.9** — loopMIDI auto-install + onboarding-gate removal: NSIS post-install hook installs loopMIDI silently via winget and seeds a default "MIDI Surface" port; app boot auto-launches loopMIDI when no port is found; full-screen splash gate replaced by inline header status pill with a popover for recovery actions
+- **Phase 4.7** — UI refinement & 5-theme system (LANDR default, Vital, Cyber, Sunset, Mono); `.module-panel` / `.header-btn` shared utilities; refined primitives
+- **Phase 4.8** — Performance optimization: piano key DOM Map cache (O(1) visual update), math-based hit-testing, `layoutStore.moduleIndex`, stable selectors, in-place performanceStore mutation, `PerformanceGrid`/`EditableGrid` split, imperative TransportButton press
+- **Phase 4.9** — loopMIDI auto-install + onboarding-gate removal: NSIS hook installs loopMIDI silently via winget and seeds default port; app boot auto-launches loopMIDI; full-screen splash replaced by inline header status pill
+- **Phase 5.0 (MIDI transport unification)** — Removed Web MIDI output fallback on desktop. WinMM is the sole output backend in Tauri; Web MIDI used only for inputs. Eliminates duplicate ports + WebView2-zero-output detection failures.
 
 ### 🟡 Next — pending user sequencing approval
-- **Phase 5 — Quick wins**: custom app icon, hotkeys (Space play/stop, R record, P performance mode, F1 help, Esc exit fullscreen, 1–4 pad bank), performance mode (auto-hide chrome), settings export/import
+- **Phase 5 — Quick wins**: custom app icon, hotkeys (Space play/stop, R record, P perf mode, F1 help, Esc exit fullscreen, 1–4 pad bank), perf mode (auto-hide chrome), settings export/import
 - **Phase 6 — Advanced musical features**: step sequencer, arpeggiator, chord generator, scale lock, XY pad, note repeat, MIDI clock sync
-- **Phase 7 — Visual polish & theming**: dynamic accent system, velocity ripples, animated background, theme editor, preset themes (Vital Default, Cyber Neon, Sunset, Mono)
-- **Phase 8 — Stretch**: LFO modulation routing, macro controls (1 knob → N CCs with curves), scenes/snapshot morphing, network MIDI (phone as 2nd surface), in-app pattern recorder + `.mid` export, Tone.js audio preview, OBS transparent-background mode
+- **Phase 7 — Visual polish & theming**: dynamic accent system, velocity ripples, animated background, theme editor
+- **Phase 8 — Stretch**: LFO modulation, macros, scenes/snapshot morphing, network MIDI, in-app pattern recorder + `.mid` export, Tone.js audio preview, OBS transparent-background mode
 
 ## 12. Coding conventions
 
-- TypeScript strict mode; `noUnusedLocals`, `noUnusedParameters`, `noUncheckedIndexedAccess`, `noImplicitOverride` all on.
-- Function components + hooks. No class components.
-- Naming: `PascalCase` components, `camelCase` functions, `SCREAMING_SNAKE_CASE` constants.
-- Feature-folder layout: `src/features/<feature>/`. Shared primitives in `src/ui/`. Stores in `src/store/`. Persistence helpers in `src/persistence/`.
+- TS strict; `noUnusedLocals`, `noUnusedParameters`, `noUncheckedIndexedAccess`, `noImplicitOverride` all on.
+- Function components + hooks. No classes.
+- `PascalCase` components, `camelCase` functions, `SCREAMING_SNAKE_CASE` constants.
+- Feature folders: `src/features/<feature>/`. Shared primitives in `src/ui/`. Stores in `src/store/`. Persistence helpers in `src/persistence/`.
 - Path alias: `@/...` maps to `src/...`.
-- No comments unless explaining a non-obvious *why*. Prefer self-explanatory names.
+- No comments unless explaining a non-obvious *why*. Self-explanatory names preferred.
 - Avoid premature abstraction — three similar lines beats a wrong-shaped helper.
-- Top-of-file comment block on every non-trivial file, briefly explaining what the file owns.
-- React.memo every UI primitive and feature module; subscribe to Zustand store slices, not whole stores.
+- Top-of-file comment block on every non-trivial file briefly explaining what it owns.
+- React.memo every UI primitive and feature module. Subscribe to Zustand slices, not whole stores.
 
-## 13. Working agreement / instructions for future AI sessions
+## 13. Working agreement — instructions for future AI sessions
 
-**Always at session start:**
+### **Core directives (non-negotiable)**
 
-1. Read this file end-to-end. Especially §3 (constraints), §8 (build invariants), §11 (phase plan), §14 (changelog).
-2. `git status` → confirm clean working tree.
-3. `git pull --rebase` → sync from remote.
+1. **Always read this file end-to-end at session start** — especially §3, §8, §11, §14, §15.
+2. **Never start coding without an approved plan.** For any non-trivial change, present the plan first and wait for explicit approval.
+3. **Ask before executing anything with side effects** — installs, builds, file writes outside the immediate task, deletions, restarts, anything destructive. Read-only investigation (Read/Grep/Glob) does not require asking.
+4. **Never push to GitHub or upload release artifacts without an explicit user instruction.** Local commits are OK. Remote sync requires the user to say "push" / "upload" / "update GitHub" / "ship".
+5. **When the user does say to push:** push commits to `origin/main` AND update the GitHub release (`gh release upload v<ver> <files> --clobber` for the version in `package.json`, attaching the standalone exe + NSIS + MSI from `C:\midi-build\release\` and its `bundle/` subfolders).
+6. **Never add features beyond the locked plan** without asking. Open questions in §15 must be resolved with the user before proceeding.
+7. **Default to terse output.** No emoji unless the user asks.
+8. **Validate before claiming done.** `npm run typecheck` AND `npm run tauri:build` (or `npm run build` for browser-only) must pass. Never mark complete on a failed check.
+9. **Touch gestures must remain suppressed per §9.** Never preventDefault on `touchstart`.
+10. **MIDI latency is sacred.** No blocking work on the emit path. Maintain zero-allocation invariants in §8.
+11. **Persist user state via debounced storage.** Losing a custom layout / preset is unacceptable.
+12. **Communicate non-obvious decisions** by adding a row to §4 with a date.
+13. **Update §11 + §14 after every sub-phase** with what shipped, why, and any non-obvious decisions.
 
-**Always when working:**
+### Sub-phase finish ritual
 
-- **Never start coding without an approved plan.** When the user asks for something non-trivial, present a plan first and wait for approval.
-- **Never add features beyond the locked plan** without asking. Open Questions in §15 must be resolved with the user before proceeding.
-- **Default to terse output.** No emoji unless the user asks.
-- **Validate before claiming done.** Run `npm run typecheck` and `npm run build` (or `npm run tauri:build` for desktop) after meaningful changes. Never mark a task complete if a check failed.
-- **Touch gestures must remain suppressed** per §9. Do NOT preventDefault on `touchstart`.
-- **MIDI latency is sacred.** Do not introduce blocking work on the MIDI emit path. Maintain the zero-allocation invariants in §8.
-- **Persist user state via debounced storage.** Losing a custom layout / preset is unacceptable.
-- **Communicate non-obvious decisions** by adding a row to §4 with a date.
+1. `npm run typecheck` and `npm run tauri:build` (or `npm run build` for browser-only). Both green.
+2. Update §11 (mark done).
+3. Add §14 changelog entry: date + substantive summary.
+4. Commit (HEREDOC, env-var identity, Co-Authored-By).
+5. **STOP. Do not push.** Wait for user instruction before any `git push` or release upload.
 
-**Always when finishing a sub-phase:**
-
-1. Run `npm run typecheck` and `npm run tauri:build` (or `npm run build` if browser-only changes). Both must be green.
-2. Update §11 (mark phase as done).
-3. Add a changelog entry to §14 with the date and a substantive summary of what shipped, why, and any non-obvious decisions.
-4. **Commit** using the convention in §7 (HEREDOC, env-var identity, Co-Authored-By).
-5. **Push** to `origin/main`.
-
-**Never:**
+### Forbidden actions
 
 - Modify global git config.
-- Commit build artifacts or anything in `node_modules/`, `dist/`, `dev-dist/`, `target/`, `C:\midi-build\`.
-- Add Web MIDI broadcasts or state pushes that fire on every MIDI event without gating on listener presence.
-- Add `preventDefault` to `touchstart`.
+- Commit `node_modules/`, `dist/`, `dev-dist/`, `target/`, `C:\midi-build\`, secrets/tokens, `*.bat` files.
+- Add Web MIDI broadcasts or state pushes that fire on every MIDI event without listener gating.
+- `preventDefault` on `touchstart`.
 - Force-push to `main`.
-- Skip hooks (`--no-verify`) without an explicit user ask.
-- Bundle large binaries or unused dependencies — the standalone `.exe` should stay under 5 MB.
+- Skip hooks (`--no-verify`) without explicit instruction.
+- Bundle large binaries or unused deps — standalone exe must stay under 5 MB.
+- Push to GitHub or upload release artifacts without explicit user instruction.
 
 ## 14. Changelog
 
 | Date | Change | By |
 |---|---|---|
-| 2026-05-05 | **Native Windows MIDI output fallback.** User showed loopMIDI running with a `MIDI Surface` port while the app still displayed `no MIDI port`, proving WebView2/Web MIDI had access but returned zero outputs. Added a Tauri WinMM bridge: `src-tauri/src/native_midi.rs` lists Windows MIDI outputs and sends through a persistent `midiOutOpen` handle with `midiOutShortMsg`; `src/app/nativeMidi.ts` wraps the Tauri commands; `MidiEngine` now merges native outputs into `listPorts()` as `native:<id>` ports and falls back to native send for note/CC/pitch/program/channel-pressure messages when a native output is selected. `midiStore` now refreshes native outputs and reselects a loop/MIDI Surface output if the persisted Web MIDI output id is stale. Validation: `npm run typecheck` green; `npm run tauri:build` green in `C:\midi-build-native`; silent-installed fixed NSIS setup; launched loopMIDI and the installed MIDI Surface app. Fixed NSIS size 1,697,674 bytes; installed exe 4,258,304 bytes. | Codex |
-| 2026-05-05 | **loopMIDI detection hardening + redistribution decision.** User reported the app was not detecting the loopMIDI port. Local inspection showed loopMIDI installed at `C:\Program Files (x86)\Tobias Erichsen\loopMIDI\loopMIDI.exe`, config seeded at `%APPDATA%\loopMIDI\loopMIDI.cfg`, and official documentation says ports exist only while loopMIDI is running. Root cause in app flow: auto-start launched loopMIDI but then relied on Web MIDI `onstatechange`; if that event did not fire, the header stayed at `no MIDI port` until manual refresh. Updated `src/app/loopMidiAutoStart.ts` to poll/refresh ports during the wait window and after launch, and updated `App.tsx` to refresh ports/status after `tryAutoStartLoopMidi()` resolves. Also checked official loopMIDI/virtualMIDI pages and found no confirmed redistribution permission, so bundling loopMIDI directly remains blocked pending explicit permission from Tobias Erichsen; keep winget/download flow or replace with a permissioned installer strategy later. | Codex |
-| 2026-05-05 | **Fixed NSIS setup missing `WebView2Loader.dll`.** User hit `midi-surface.exe - System Error` after installing the NSIS setup: `WebView2Loader.dll was not found`. Root cause: the GNU Tauri release folder had `WebView2Loader.dll` beside `midi-surface.exe`, and MSI included it, but the generated NSIS script copied only the main exe. Added `NSIS_HOOK_PREINSTALL` in `src-tauri/windows/installer-hooks.nsh` to copy `$%CARGO_TARGET_DIR%\release\WebView2Loader.dll` into `$INSTDIR` as `WebView2Loader.dll`. Rebuilt into `C:\midi-build-fixed`; fixed NSIS installer size 1,693,647 bytes. Silent-installed the fixed setup successfully; verified `%LOCALAPPDATA%\MIDI Surface` now contains `midi-surface.exe`, `uninstall.exe`, and `WebView2Loader.dll`; launched the installed exe successfully with window title `MIDI Surface`. | Codex |
-| 2026-05-05 | **Release-prep audit + fresh artifacts.** Read this context first, reviewed the Tauri release path, and found the existing MSI in `C:\midi-build` was stale from 2026-04-30 while the exe/NSIS were newer. A rebuild in `C:\midi-build` refreshed the exe and NSIS but MSI bundling failed with Windows `Access is denied. (os error 5)` because `msiexec` held the old MSI and could not be stopped from the current shell. Built successfully into `C:\midi-build-fresh` instead: standalone `midi-surface.exe` (4,247,552 bytes), NSIS `MIDI Surface_0.1.0_x64-setup.exe` (1,628,222 bytes), and MSI `MIDI Surface_0.1.0_x64_en-US.msi` (2,342,912 bytes), all timestamped 2026-05-05 19:48. Also aligned npm package metadata to `0.1.0` and added the missing PWA icon assets under `public/icons/` so the browser fallback manifest resolves. Validation: `npm run typecheck`, `npm run build`, and `npm run tauri:build` all green. Launched the fresh standalone exe for user testing. | Codex |
-| 2026-04-29 | Initial context file created with preliminary scope, open questions, and proposed stack. | Claude |
-| 2026-04-29 | Open questions resolved: FL+Ableton, loopMIDI, Brave, touch-enabled with gesture suppression, Latitude 7420 2-in-1 multi-monitor, PWA delivery, production use, Vital-inspired dynamic visuals, MIDI-only audio, full stack locked, resizable layout, no OBS. Locked plan written. | Claude |
-| 2026-04-29 | **Phase 0 — Scaffolding.** Vite+React+TS scaffold; Tailwind/ESLint/Prettier/strict TS configured; `touchSuppress.ts` installed at root; vite-plugin-pwa wired; Onboarding screen gates entry until `requestMIDIAccess` resolves. Bundle: 148 KB JS / 9.8 KB CSS. | Claude |
-| 2026-04-29 | **Phase 1 — MIDI core.** `MidiEngine` owns the live `MIDIAccess`: port enumeration with hot-plug, output port selection + send helpers, input subscription with parsed `MidiEvent` broadcasting, parser for all standard channel + system real-time messages. Stores: `midiStore`, `settingsStore`, `learnStore`. Activity Monitor module. Settings panel. QWERTY fallback (A–L scale, W/E/T/Y/U/O/P black, Z/X octave, C/V velocity, blur → panic). Removed `@types/webmidi` (clashes with TS 5.5 lib.dom). Bundle: 171 KB JS / 13 KB CSS. | Claude |
-| 2026-04-29 | **Phase 2 — Performance modules.** `performanceStore`. Default MIDI map (`src/features/midi-engine/defaults.ts`): pads → ch10 notes 36–51 / 52–67 / 68–83 / 84–99 (banks A/B/C/D), knobs → CC 16–23, faders → CC 20–27, mod wheel → CC 1, transport → CC 115–119. Stable controlIds. UI primitives: Pad, Knob (SVG arc), Fader, Wheel, TransportButton. Feature modules: PadGrid (4×4 + bank switcher), KnobRow + FaderRow (8 each), Wheels, PianoKeyboard (3 octaves, multi-touch + glide), Transport (Play/Stop/Rec/Loop/Metro/Tap-tempo). Global Learn toggle. Bundle: 191 KB JS / 17 KB CSS. | Claude |
-| 2026-04-29 | **Phase 2.1 — Chord robustness + responsive keyboard.** Added multi-touch `preventDefault` (turned out to be a regression — see 2.2). PianoKeyboard rewritten as fully responsive via ResizeObserver, configurable 1..7 octaves with in-header zoom, drag-to-resize bottom edge. Layout: piano spans full bottom row. Settings: `pianoOctaves`, `pianoHeight`. Fullscreen toggle button. | Claude |
-| 2026-04-29 | **Phase 2.2 — Chord-killer fix + perf overhaul.** Critical bug fixed: the multi-touch `preventDefault` from 2.1 was silently cancelling 2nd/3rd-finger `pointerdown` events. Reverted that listener; rely on `touch-action: none` + `gesturestart/change/end` prevent. Performance: `debouncedLocalStorage` (300 ms) wraps all three persisted stores. PianoKeyboard hot path uses `data-active` DOM toggling instead of React state. Per-key refcount for chord-shared keys. `Pad` / `Knob` / `Fader` / `Wheel` / `TransportButton` wrapped in `memo`. `KnobRow` / `FaderRow` split into per-control components. App subscribes to slim store slices. Layout: knob 62→52, fader 180→130, wheel 200→130 horizontal. Bundle: 194 KB JS / 18 KB CSS. | Claude |
-| 2026-04-29 | **Phase 2.3 — Zero-alloc MIDI hot path.** `MidiEngine` rewritten with pre-allocated `Uint8Array(2)` and `Uint8Array(3)` send buffers + shared mutable broadcast event. Broadcast gated on `eventListeners.size > 0`. `MidiEvent.raw` made optional, skipped for outgoing. `midiStore` reduced to ports / outputId / inputId — no events buffer. `ActivityMonitor` owns its own buffer fed by listener; 10 Hz `setInterval` refresh. App attaches learn listener only while `learnMode` true. `Pad` press is fully imperative — `data-active='1'` + `--pad-glow` CSS var, zero React state. Bundle: 195 KB JS / 19 KB CSS. | Claude |
-| 2026-04-30 | **Phase 3 — Tauri 2 desktop app.** Rust 1.95 GNU toolchain via `rustup --default-host x86_64-pc-windows-gnu --profile minimal`. MinGW-w64 via `choco install mingw -y` at `C:\ProgramData\mingw64\mingw64\bin`. `src-tauri/` with Cargo.toml (release profile tuned for size: `lto, opt-level="z", codegen-units=1, panic=abort, strip=true`), tauri.conf.json (1600×1000 default, dark theme, NSIS + MSI bundles, identifier `com.midisurface.app`), capabilities (core + window controls + `shell:allow-open` allow-list). `vite.config.ts` skips PWA when `TAURI_ENV_PLATFORM` set. **`CARGO_TARGET_DIR=C:\midi-build`** is required because binutils' dlltool can't handle the project path's space. Onboarding wires `@tauri-apps/plugin-shell` for the loopMIDI download link + Refresh-ports button + auto-refresh on focus. New `src/app/runtime.ts` with `isTauri()` and `openExternal()`. Launchers: `run.bat` (smart), `dev.bat`, `build.bat`. Removed `run-preview.bat`. **Artifacts**: 4 MB standalone `.exe`, 1.5 MB NSIS installer, 2.2 MB MSI. | Claude |
-| 2026-04-30 | **Repo published.** Initial commit covering all phases (75 files, ~910 KB). Private GitHub repo at `Haseeb3011/midi-surface`. Author identity set per-commit via env vars (no global git config touched). | Claude |
-| 2026-04-30 | **AI_CONTEXT.md fully rewritten.** Consolidated into a clean living document with explicit git workflow (§7), build environment & gotchas (§8), zero-alloc invariants, and end-of-session checklist for keeping the repo updated. | Claude |
-| 2026-05-01 | **Phase 4 — Customization.** Layout system: `Layout`, `LayoutPage`, `ModuleInstance`, `ControlOverride` types in `src/features/layout/types.ts`. Dexie DB in `src/persistence/db.ts` (seeded with 3 built-in presets: Default, Drums Focus, Keys Focus). `layoutStore` (Zustand, in-memory working copy; explicit save to Dexie). `LayoutRenderer` maps module arrays to 4-column CSS Grid. `PageTabs` for multi-page navigation. `ModuleWrapper` with dnd-kit `useSortable` drag handle + `ResizeHandle` corner grip (colSpan snap: 1/2/4). Per-control overrides (`colorHue`, `label`, `channel`, `CC`, `note`) wired into KnobRow, FaderRow, PadGrid — render via `useControlOverride` hook, MIDI send via `getControlOverride` synchronous getter (null fast-path, zero overhead during play). `ControlOverridePanel` sidebar: label, 9-hue swatch row, channel select, CC/note inputs per control. `PresetBrowser` sidebar: live Dexie list via `useLiveQuery`, load/duplicate/rename/delete/export JSON/import JSON. Edit mode toggle in header; Save/Discard buttons; built-ins prompt "save as" on Save. Bundle: 364 KB JS / 21 KB CSS (Vite build clean, Tauri build clean — Rust compiled in 4m 14s). | Claude |
-| 2026-05-05 | **Phase 4.9 — loopMIDI auto-install + onboarding-gate removal.** NSIS post-install hook (`src-tauri/windows/installer-hooks.nsh`) silently installs loopMIDI via Microsoft `winget` (`TobiasErichsen.loopMIDI` package) using `Start-Process -Wait` and seeds `%APPDATA%\loopMIDI\loopMIDI.cfg` with a default port named "MIDI Surface" iff the user has no existing config. Avoids redistributing the loopMIDI binary directly (no license risk) and skips elevation since the install is per-user (`installMode: currentUser`). Wired through `bundle.windows.nsis.installerHooks` in `tauri.conf.json`. New runtime helper `src/app/loopMidiAutoStart.ts` — on app boot, if no output port appears within 1.5 s, attempts `open()` on `loopMIDI.exe` from its known install paths via `@tauri-apps/plugin-shell`, then waits up to 3 s for the port to surface via the existing `onPortsChanged` observer. Capability allow-list (`src-tauri/capabilities/default.json`) extended to include the two known loopMIDI install paths under `shell:allow-open`. New `src/app/MidiStatus.tsx` — header status pill that renders three live states (green connected / amber no-port / red denied-or-unsupported) and opens a `.glass` popover with the same recovery actions the old splash had: Start loopMIDI, Refresh ports, Open download page. Window-focus auto-refresh preserved. Onboarding splash deleted (`src/app/Onboarding.tsx`); the legacy `onboarded` localStorage key is one-shot cleaned up on first boot. App.tsx loses the gate entirely — surface renders immediately, `<MidiStatus />` reports inline, `tryAutoStartLoopMidi()` runs in the background. Bundle: 364 KB JS / 25 KB CSS, NSIS installer +5 KB for the hook script, no embedded loopMIDI binary. Tauri Rust 2m 08s. | Claude |
-| 2026-05-05 | **Phase 4.8 — Performance optimization.** Targets identified by a chord-storm audit. Piano keyboard: replaced per-press `container.querySelector('[data-note]')` with a `Map<note, HTMLElement>` rebuilt in `useLayoutEffect` keyed on layout — O(1) visual updates instead of O(36) DOM scans per key (4× per chord press + 4× per release). Replaced `document.elementFromPoint` (forces sync layout flush) in `pointermove` with math-based hit-testing using cached container bounds + the layout's pre-computed key positions: black keys take precedence in the upper Y-band via short linear scan, whites resolve via `Math.floor(x / whiteWidth)`. ResizeObserver in `PianoKeyboard` coalesced via `requestAnimationFrame` so dnd-kit-driven width churn doesn't fire setState every frame. CSS `transition: background 60ms` removed from `.piano-key-white` and `.piano-key-black` — instant snap on chord press / release; eliminates overlapping transition pile-ups during glissandos. `layoutStore` gained a derived `moduleIndex: Map<string, ModuleInstance>` rebuilt inside every layout-mutating action; `getControlOverride` and `useControlOverride` now do O(1) Map lookup instead of `pages × modules` linear walk per MIDI event. `useControlOverride` selector is `useMemo`-stabilized per `(moduleId, controlId)` so Zustand reuses the memoized result and editMode toggles don't trigger 60+ selector re-runs. `performanceStore.setKnob` / `setFader` switched to in-place mutation with a no-op fast-path (skip set when rounded value unchanged) — eliminates the per-drag-tick `array.slice()` allocation; safe because every consumer subscribes via `s.knobs[i]` (primitive). `LayoutRenderer` split into `PerformanceGrid` (subscribes only to active page's modules) and `EditableGrid` (mounts dnd-kit `DndContext` + `SortableContext` only when editMode is true) — flipping edit mode no longer cascades into module re-renders during play. Pad imperative path: `el.removeAttribute('data-active')` instead of `delete el.dataset.active`, `String(glow)` instead of `glow.toFixed(3)` to skip a string allocation per press. `TransportButton` press visual moved off React state to `data-pressed` attribute + `.transport-btn` CSS class — zero re-renders on press / release. Bundle: 364 KB JS / 26.5 KB CSS (essentially unchanged). Tauri Rust compile 2m 34s (down from 3m 02s in 4.7 — fewer changes for the linker to chew on). | Claude |
-| 2026-05-03 | **Phase 4.7 — UI refinement & theme overhaul.** Full design-token rewrite in `src/styles/tokens.css`: 12 color tokens (added `surface-low`, `border-soft`, `border-strong`, `text-soft`) × 5 themes — **LANDR (new default, deep teal/blue minimal)**, Vital, Cyber, Sunset, Mono. Each theme rewires the entire palette; structure is theme-invariant. Added radius scale (`--r-sm` 6 / `--r-md` 10 / `--r-lg` 14 / `--r-xl` 18) and elevation scale (`--elev-1`, `--elev-2`, `--elev-glow`). `tailwind.config.ts` exposes new color/radius/shadow utilities. New shared CSS classes in `globals.css`: `.module-panel` (flat theme-tinted module surface, 16px padding, no backdrop-blur), `.module-header` / `.module-title` / `.module-meta`, and `.header-btn` (canonical 32px-height pill with `data-active` and `data-tone='ok'\|'warn'\|'accent'` variants). `.glass` reserved for sidebar panels (settings/activity/presets/override) only — modules are now flat. Primitives refined: Knob arc 3→2px stroke, indicator dot replaced with thin radial line, recessed body via stacked surface circles, value text in sans tabular-nums; Fader track 28→20px wide, thumb 12→8px, lower glow base; Wheel 36→28px wide, thumb 24→16px; Pad: dim by default (glow=0), border-soft, radius-md; TransportButton pinned to h-9, sans label, halved active glow. Piano black-key gradient now reads `--surface-low → --bg` (was hardcoded). Every feature module migrated from `.glass` to `.module-panel`. App header, page tabs, sidebar panels (Settings, Activity, Presets, Override) and module sub-controls (PadGrid bank buttons, PianoKeyboard root/zoom, PresetBrowser/ControlOverridePanel) all use `.header-btn`. SettingsPanel theme picker rebuilt with full per-theme palette swatch previews. `settingsStore` extended: `ThemeName` union (`landr` \| `vital` \| `cyber` \| `sunset` \| `mono`), persist version bumped to 3, migration maps legacy `'default'` → `'landr'`. App.tsx theme effect treats `'landr'` as the `:root` baseline (no `data-theme` attr). Performance invariants preserved — no new React state on hot paths, no per-control re-renders, theme switch is still a single CSS-variable swap. Bundle: 363 KB JS / 26 KB CSS. Tauri build clean (Rust 3m 02s). | Claude |
+| 2026-05-06 | **Phase 5.0 — WinMM-only desktop transport.** Removed dual Web MIDI + native fallback. `MidiEngine` now platform-splits: Tauri uses WinMM exclusively for outputs; Web MIDI used only for inputs (Learn / Activity Monitor) and gracefully tolerates failure. Browser PWA still uses Web MIDI for both. Fixes: duplicate loopMIDI ports in the picker, silent send-no-ops when persisted id mismatched the active backend, WebView2's intermittent zero-output enumeration. `midiStore.refreshPorts` is now async; `loopMidiAutoStart` polling awaits it so the next-tick check sees authoritative state. **Repo hygiene:** `.bat` files (`run.bat`, `dev.bat`, `build.bat`) untracked + gitignored as user-machine-specific. **AI_CONTEXT** rewritten/compressed; tightened push policy (no GitHub push or release upload without explicit user instruction; releases must be updated with fresh artifacts when pushing). | Claude |
+| 2026-05-05 | **Native Windows MIDI output fallback.** User showed loopMIDI running with a `MIDI Surface` port while the app still displayed `no MIDI port`, proving WebView2/Web MIDI had access but returned zero outputs. Added Tauri WinMM bridge (`src-tauri/src/native_midi.rs` + `src/app/nativeMidi.ts` + `MidiEngine` integration). Validated; native ports exposed as `native:<id>`. *Superseded by 2026-05-06 (fallback removed; WinMM is now the sole desktop output path).* | Codex |
+| 2026-05-05 | **loopMIDI detection hardening + redistribution decision.** Auto-start launched loopMIDI but relied on Web MIDI `onstatechange`; if that didn't fire, header stuck at `no MIDI port`. Updated `loopMidiAutoStart` to poll/refresh during the wait window; `App.tsx` refreshes ports/status after `tryAutoStartLoopMidi()` resolves. loopMIDI/virtualMIDI redistribution permission unconfirmed → keep winget+download flow. | Codex |
+| 2026-05-05 | **Fixed NSIS missing `WebView2Loader.dll`.** Hit `WebView2Loader.dll was not found` after NSIS install. Added `NSIS_HOOK_PREINSTALL` to copy the loader DLL from cargo release dir into `$INSTDIR`. | Codex |
+| 2026-05-05 | **Release-prep audit + fresh artifacts.** Stale MSI in `C:\midi-build`; rebuild blocked by msiexec lock. Built into `C:\midi-build-fresh` instead. Aligned npm metadata to 0.1.0; added missing PWA icons in `public/icons/`. | Codex |
+| 2026-05-05 | **Phase 4.9 — loopMIDI auto-install + onboarding-gate removal.** NSIS post-install hook silently installs loopMIDI via `winget` (`TobiasErichsen.loopMIDI`) and seeds `%APPDATA%\loopMIDI\loopMIDI.cfg` w/ a default `MIDI Surface` port iff none exists. New `src/app/loopMidiAutoStart.ts` auto-launches loopMIDI on boot if no port appears within 1.5 s, then waits up to 3 s. Capability allow-list extended to the two known loopMIDI install paths. New `MidiStatus.tsx` header pill with three live states (green / amber / red) + popover with Start / Refresh / Download. Onboarding splash deleted; legacy `onboarded` localStorage one-shot cleaned up. | Claude |
+| 2026-05-03 | **Phase 4.8 — Performance optimization.** Piano key `Map<note, HTMLElement>` cache; math-based hit-testing (no `elementFromPoint`); ResizeObserver coalesced via rAF; piano-key CSS transitions removed. `layoutStore.moduleIndex` for O(1) override lookup. `useControlOverride` selector `useMemo`-stabilized. `performanceStore.setKnob`/`setFader` in-place w/ no-op fast-path. `LayoutRenderer` split into `PerformanceGrid` + `EditableGrid` (dnd-kit only mounts in edit mode). Pad imperative `removeAttribute` + `String(glow)`. `TransportButton` press → `data-pressed` (no React state). | Claude |
+| 2026-05-03 | **Phase 4.7 — UI refinement & theme overhaul.** 12 color tokens × 5 themes (LANDR new default, Vital, Cyber, Sunset, Mono). Radius + elevation scales. New shared classes: `.module-panel`, `.module-header`, `.header-btn` (with `data-tone='ok'\|'warn'\|'accent'`). `.glass` reserved for sidebar panels. Refined primitives. `settingsStore` `ThemeName` union, persist v3 migration. | Claude |
+| 2026-05-01 | **Phase 4 — Customization.** Layout system (`Layout`, `LayoutPage`, `ModuleInstance`, `ControlOverride`). Dexie DB w/ 3 built-in presets. `layoutStore` (in-memory working copy; explicit save). `LayoutRenderer` 4-col CSS grid. `PageTabs`, `ModuleWrapper` w/ dnd-kit + `ResizeHandle` (colSpan snap 1/2/4). Per-control overrides (hue, label, channel, CC, note). `ControlOverridePanel` + `PresetBrowser` (load/duplicate/rename/delete/export/import). | Claude |
+| 2026-04-30 | **Phase 3 — Tauri 2 desktop app.** Rust GNU + MinGW. NSIS + MSI bundles. `CARGO_TARGET_DIR=C:\midi-build` required. Onboarding wires `@tauri-apps/plugin-shell`. New `runtime.ts` (`isTauri()`, `openExternal()`). Launcher `.bat` files. Artifacts: 4 MB exe, 1.5 MB NSIS, 2.2 MB MSI. | Claude |
+| 2026-04-30 | **Repo published.** Initial commit covering all phases. Private GitHub repo `Haseeb3011/midi-surface`. Per-commit env-var identity. | Claude |
+| 2026-04-29 | **Phase 2.3 — Zero-alloc MIDI hot path.** Pre-allocated `Uint8Array(2)`/`(3)` send buffers, shared mutable broadcast event. Broadcast gated on listener count. `midiStore` no events buffer. `ActivityMonitor` owns its own ring buffer. Pad press fully imperative. | Claude |
+| 2026-04-29 | **Phase 2.2 — Chord-killer fix + perf overhaul.** Reverted multi-touch `preventDefault` from 2.1 (it was cancelling 2nd/3rd-finger `pointerdown`). `debouncedLocalStorage(300)` for all persisted stores. PianoKeyboard imperative via `data-active`. Per-key refcount. `Pad`/`Knob`/`Fader`/`Wheel`/`TransportButton` memoized. Slim slice subscriptions. | Claude |
+| 2026-04-29 | **Phase 2.1 — Chord robustness + responsive keyboard.** PianoKeyboard rewritten responsive via ResizeObserver, 1..7 octaves, drag-to-resize. Fullscreen toggle. (Multi-touch preventDefault from this phase reverted in 2.2.) | Claude |
+| 2026-04-29 | **Phase 2 — Performance modules.** `performanceStore`, default MIDI map (pads ch10 / knobs CC 16–23 / faders CC 20–27 / mod wheel CC 1 / transport CC 115–119), Pad/Knob/Fader/Wheel/TransportButton primitives, PadGrid (4×4 + bank switcher), KnobRow + FaderRow, Wheels, PianoKeyboard, Transport (Play/Stop/Rec/Loop/Metro/Tap-tempo), global Learn toggle. | Claude |
+| 2026-04-29 | **Phase 1 — MIDI core.** `MidiEngine`, parser, `midiStore`, `settingsStore`, `learnStore`, Activity Monitor, Settings panel, QWERTY fallback. | Claude |
+| 2026-04-29 | **Phase 0 — Scaffolding.** Vite/React/TS, Tailwind, ESLint/Prettier, `touchSuppress.ts`, vite-plugin-pwa, Onboarding splash. | Claude |
+| 2026-04-29 | Open questions resolved + locked plan. | Claude |
+| 2026-04-29 | Initial AI_CONTEXT created. | Claude |
 
 ## 15. Open questions
 
-_None at the moment — all resolved. Add new ones here as they come up._
+_None at the moment._
 
-## 16. Next-session quickstart cheat sheet
+## 16. Next-session quickstart
 
 ```bash
-# 1) Always: sync from remote
+# 1) Sync from remote
 cd "C:/Users/hasee/Documents/App Projects/MIDI Project"
 git status
 git pull --rebase
 
-# 2) For Rust / Tauri work, prepend the toolchain to PATH and redirect target dir:
+# 2) Rust/Tauri shell env
 export PATH="$HOME/.cargo/bin:/c/ProgramData/mingw64/mingw64/bin:$PATH"
 export CARGO_TARGET_DIR="C:/midi-build"
 
-# 3) Smoke test before claiming done:
+# 3) Smoke test before claiming done
 npm run typecheck
 npm run tauri:build  # or `npm run build` for browser-only changes
 
-# 4) Commit (env-var identity, HEREDOC, Co-Authored-By):
+# 4) Commit (env-var identity, HEREDOC, Co-Authored-By)
 GIT_AUTHOR_NAME="Haseeb3011" GIT_AUTHOR_EMAIL="haseeb309786@gmail.com" \
 GIT_COMMITTER_NAME="Haseeb3011" GIT_COMMITTER_EMAIL="haseeb309786@gmail.com" \
 git commit -m "$(cat <<'EOF'
@@ -382,6 +353,14 @@ Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>
 EOF
 )"
 
-# 5) Push
-git push
+# 5) STOP. Do NOT push or upload to GitHub without an explicit user instruction.
+#    When the user does say to push:
+#       git push
+#       VER=$(node -p "require('./package.json').version")
+#       gh release upload "v$VER" \
+#         "C:/midi-build/release/midi-surface.exe" \
+#         "C:/midi-build/release/bundle/nsis/MIDI Surface_${VER}_x64-setup.exe" \
+#         "C:/midi-build/release/bundle/msi/MIDI Surface_${VER}_x64_en-US.msi" \
+#         --clobber
+#       # (or `gh release create v$VER <files> --title "..." --notes "..."` if tag missing)
 ```

@@ -47,3 +47,6 @@ src-tauri/gen/schemas/
 # Note: this path is on C:\, outside the repo, but if anyone happens to have
 # `target/` inside the project root we don't want it tracked either.
 target/
+
+# local launcher scripts — paths are user-machine-specific
+*.bat

@@ -66,14 +66,14 @@ export function App() {
         const restoredIn = useSettingsStore.getState().inputId;
         if (restoredOut) useMidiStore.getState().setOutput(restoredOut);
         if (restoredIn) useMidiStore.getState().setInput(restoredIn);
-        useMidiStore.getState().refreshPorts();
+        void useMidiStore.getState().refreshPorts();
         // Best-effort: if no output port appears on its own, try to launch
         // loopMIDI from its known install path. Silent no-op when not under
         // Tauri or when loopMIDI isn't installed.
         void (async () => {
           await tryAutoStartLoopMidi();
           if (cancelled) return;
-          useMidiStore.getState().refreshPorts();
+          await useMidiStore.getState().refreshPorts();
           setStatus(await checkMidiSupport());
         })();
       }

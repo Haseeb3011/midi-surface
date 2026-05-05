@@ -1,23 +1,18 @@
 /*
   MIDI Engine — performance-tuned hot path.
 
-  Design goal: when nothing is observing MIDI events (Activity Monitor closed,
-  Learn mode off), every send method should:
-    - acquire the output port
-    - pack 2-3 bytes into a pre-allocated Uint8Array
-    - call MIDIOutput.send()
-    - return
+  Platform split:
+    - **Tauri (desktop):** outputs go through the native WinMM bridge
+      (`src-tauri/src/native_midi.rs`). Web MIDI is used only for inputs
+      (MIDI Learn / Activity Monitor capture). WebView2's Web MIDI output
+      enumeration has been observed to silently return zero ports even when
+      access is granted, so we don't trust it for outbound traffic.
+    - **Browser PWA:** Web MIDI for both inputs and outputs (no other choice).
 
-  No object allocation. No Zustand state updates. No React re-renders.
-
-  When observers ARE listening (Activity Monitor mounted, or Learn mode on), we
-  broadcast a SHARED transient event object that listeners must inspect
-  immediately and not retain. The Activity Monitor copies fields it needs into
-  its own ring buffer; the Learn store reads kind/channel/data immediately and
-  bails. Single object reused across every event = zero GC pressure.
-
-  Inbound messages (rare unless DAW echoes) are also gated — if no listeners,
-  the input port handler returns immediately without parsing.
+  Hot-path goal: when nothing is observing MIDI events (Activity Monitor
+  closed, Learn mode off), every send method should pack 2-3 bytes into a
+  pre-allocated buffer and dispatch — no allocation, no Zustand updates, no
+  React re-renders.
 */
 
 import type { MidiChannel, MidiEvent, MidiEventKind, MidiPortInfo } from './types';
@@ -28,6 +23,7 @@ import {
   selectNativeMidiOutput,
   sendNativeMidiShort,
 } from '@/app/nativeMidi';
+import { isTauri } from '@/app/runtime';
 
 export interface MidiSupportStatus {
   supported: boolean;
@@ -45,6 +41,7 @@ class MidiEngineImpl {
   private selectedInputId: string | null = null;
   private inputHandler: ((e: MIDIMessageEvent) => void) | null = null;
   private nativeOutputs: MidiPortInfo[] = [];
+  private tauri = false;
 
   private portsListeners = new Set<Listener<MidiPortInfo[]>>();
   private eventListeners = new Set<Listener<MidiEvent>>();
@@ -64,33 +61,57 @@ class MidiEngineImpl {
 
   // ---- lifecycle ------------------------------------------------------------
 
-  async ensureAccess(): Promise<MIDIAccess> {
+  async ensureAccess(): Promise<MIDIAccess | null> {
     if (this.access) return this.access;
+    this.tauri = isTauri();
     if (typeof navigator === 'undefined' || !('requestMIDIAccess' in navigator)) {
+      if (this.tauri) return null;
       throw new Error('Web MIDI API is not supported in this browser.');
     }
-    this.access = await navigator.requestMIDIAccess({ sysex: false, software: true });
-    this.access.onstatechange = () => this.emitPorts();
+    try {
+      this.access = await navigator.requestMIDIAccess({ sysex: false, software: true });
+      this.access.onstatechange = () => this.emitPorts();
+    } catch (err) {
+      // Under Tauri we tolerate Web MIDI being unavailable — outputs use WinMM.
+      // Inputs (Learn / Activity Monitor) just won't work in that case.
+      if (this.tauri) return null;
+      throw err;
+    }
     return this.access;
   }
 
   async checkSupport(): Promise<MidiSupportStatus> {
-    await this.refreshNativeOutputs();
-    if (typeof navigator === 'undefined' || !('requestMIDIAccess' in navigator)) {
+    this.tauri = isTauri();
+
+    if (this.tauri) {
+      await this.refreshNativeOutputs();
+      try {
+        await this.ensureAccess();
+      } catch {
+        /* inputs unavailable — outputs still work via WinMM */
+      }
       return {
-        supported: this.nativeOutputs.length > 0,
-        state: this.nativeOutputs.length > 0 ? 'granted' : 'unsupported',
-        inputs: 0,
+        supported: true,
+        state: 'granted',
+        inputs: this.access?.inputs.size ?? 0,
         outputs: this.nativeOutputs.length,
       };
     }
+
+    if (typeof navigator === 'undefined' || !('requestMIDIAccess' in navigator)) {
+      return { supported: false, state: 'unsupported', inputs: 0, outputs: 0 };
+    }
+
     try {
       const access = await this.ensureAccess();
+      if (!access) {
+        return { supported: false, state: 'error', inputs: 0, outputs: 0 };
+      }
       return {
         supported: true,
         state: 'granted',
         inputs: access.inputs.size,
-        outputs: access.outputs.size + this.nativeOutputs.length,
+        outputs: access.outputs.size,
       };
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -108,15 +129,19 @@ class MidiEngineImpl {
   // ---- ports ----------------------------------------------------------------
 
   listPorts(): MidiPortInfo[] {
-    if (!this.access) return this.nativeOutputs;
     const out: MidiPortInfo[] = [];
-    for (const p of this.access.inputs.values()) out.push(this.toInfo(p, 'input'));
-    for (const p of this.access.outputs.values()) out.push(this.toInfo(p, 'output'));
-    out.push(...this.nativeOutputs);
+    if (this.access) {
+      for (const p of this.access.inputs.values()) out.push(this.toInfo(p, 'input'));
+      if (!this.tauri) {
+        for (const p of this.access.outputs.values()) out.push(this.toInfo(p, 'output'));
+      }
+    }
+    if (this.tauri) out.push(...this.nativeOutputs);
     return out;
   }
 
   async refreshNativeOutputs(): Promise<void> {
+    if (!this.tauri) return;
     const outputs = await listNativeMidiOutputs();
     this.nativeOutputs = outputs.map((p) => ({
       id: nativeMidiId(p.id),
@@ -155,35 +180,37 @@ class MidiEngineImpl {
 
   selectOutput(id: string | null): void {
     this.selectedOutputId = id;
-    void selectNativeMidiOutput(parseNativeMidiId(id));
+    if (this.tauri) {
+      void selectNativeMidiOutput(parseNativeMidiId(id));
+    }
   }
 
   getSelectedOutputId(): string | null {
     return this.selectedOutputId;
   }
 
-  private getOutput(): MIDIOutput | null {
+  private getWebOutput(): MIDIOutput | null {
+    if (this.tauri) return null;
     if (!this.access || !this.selectedOutputId) return null;
-    if (parseNativeMidiId(this.selectedOutputId) !== null) return null;
     return this.access.outputs.get(this.selectedOutputId) ?? null;
   }
 
-  private getSelectedNativeOutput(): MidiPortInfo | null {
+  private getNativeOutput(): MidiPortInfo | null {
+    if (!this.tauri) return null;
     if (parseNativeMidiId(this.selectedOutputId) === null) return null;
     return this.nativeOutputs.find((p) => p.id === this.selectedOutputId) ?? null;
   }
 
-  /** Generic 1..N byte send. Allocates only if an arbitrary array is passed. */
+  /** Generic 1..N byte send. Browser path only — no equivalent in WinMM bridge. */
   send(bytes: number[] | Uint8Array): void {
-    const out = this.getOutput();
+    const out = this.getWebOutput();
     if (!out) return;
     out.send(bytes);
   }
 
   noteOn(channel: MidiChannel, note: number, velocity = 100): void {
-    const out = this.getOutput();
-    if (!out) {
-      const native = this.getSelectedNativeOutput();
+    if (this.tauri) {
+      const native = this.getNativeOutput();
       if (!native) return;
       sendNativeMidiShort(0x90 | channel, note, velocity);
       if (this.eventListeners.size > 0) {
@@ -199,6 +226,8 @@ class MidiEngineImpl {
       }
       return;
     }
+    const out = this.getWebOutput();
+    if (!out) return;
     const buf = this.out3;
     buf[0] = 0x90 | channel;
     buf[1] = note & 0x7f;
@@ -218,9 +247,8 @@ class MidiEngineImpl {
   }
 
   noteOff(channel: MidiChannel, note: number, velocity = 0): void {
-    const out = this.getOutput();
-    if (!out) {
-      const native = this.getSelectedNativeOutput();
+    if (this.tauri) {
+      const native = this.getNativeOutput();
       if (!native) return;
       sendNativeMidiShort(0x80 | channel, note, velocity);
       if (this.eventListeners.size > 0) {
@@ -228,6 +256,8 @@ class MidiEngineImpl {
       }
       return;
     }
+    const out = this.getWebOutput();
+    if (!out) return;
     const buf = this.out3;
     buf[0] = 0x80 | channel;
     buf[1] = note & 0x7f;
@@ -239,9 +269,8 @@ class MidiEngineImpl {
   }
 
   cc(channel: MidiChannel, cc: number, value: number): void {
-    const out = this.getOutput();
-    if (!out) {
-      const native = this.getSelectedNativeOutput();
+    if (this.tauri) {
+      const native = this.getNativeOutput();
       if (!native) return;
       sendNativeMidiShort(0xb0 | channel, cc, value);
       if (this.eventListeners.size > 0) {
@@ -249,6 +278,8 @@ class MidiEngineImpl {
       }
       return;
     }
+    const out = this.getWebOutput();
+    if (!out) return;
     const buf = this.out3;
     buf[0] = 0xb0 | channel;
     buf[1] = cc & 0x7f;
@@ -260,33 +291,33 @@ class MidiEngineImpl {
   }
 
   pitchBend(channel: MidiChannel, value14: number): void {
-    const out = this.getOutput();
     const v = Math.max(0, Math.min(0x3fff, value14 | 0));
-    if (!out) {
-      const native = this.getSelectedNativeOutput();
+    const lsb = v & 0x7f;
+    const msb = (v >> 7) & 0x7f;
+    if (this.tauri) {
+      const native = this.getNativeOutput();
       if (!native) return;
-      const lsb = v & 0x7f;
-      const msb = (v >> 7) & 0x7f;
       sendNativeMidiShort(0xe0 | channel, lsb, msb);
       if (this.eventListeners.size > 0) {
         this.broadcast('out', 'pitchBend', channel, lsb, msb, native.id, native.name);
       }
       return;
     }
+    const out = this.getWebOutput();
+    if (!out) return;
     const buf = this.out3;
     buf[0] = 0xe0 | channel;
-    buf[1] = v & 0x7f;
-    buf[2] = (v >> 7) & 0x7f;
+    buf[1] = lsb;
+    buf[2] = msb;
     out.send(buf);
     if (this.eventListeners.size > 0) {
-      this.broadcast('out', 'pitchBend', channel, buf[1], buf[2], out.id, out.name ?? '');
+      this.broadcast('out', 'pitchBend', channel, lsb, msb, out.id, out.name ?? '');
     }
   }
 
   programChange(channel: MidiChannel, program: number): void {
-    const out = this.getOutput();
-    if (!out) {
-      const native = this.getSelectedNativeOutput();
+    if (this.tauri) {
+      const native = this.getNativeOutput();
       if (!native) return;
       sendNativeMidiShort(0xc0 | channel, program, 0);
       if (this.eventListeners.size > 0) {
@@ -294,6 +325,8 @@ class MidiEngineImpl {
       }
       return;
     }
+    const out = this.getWebOutput();
+    if (!out) return;
     const buf = this.out2;
     buf[0] = 0xc0 | channel;
     buf[1] = program & 0x7f;
@@ -304,9 +337,8 @@ class MidiEngineImpl {
   }
 
   channelPressure(channel: MidiChannel, value: number): void {
-    const out = this.getOutput();
-    if (!out) {
-      const native = this.getSelectedNativeOutput();
+    if (this.tauri) {
+      const native = this.getNativeOutput();
       if (!native) return;
       sendNativeMidiShort(0xd0 | channel, value, 0);
       if (this.eventListeners.size > 0) {
@@ -314,6 +346,8 @@ class MidiEngineImpl {
       }
       return;
     }
+    const out = this.getWebOutput();
+    if (!out) return;
     const buf = this.out2;
     buf[0] = 0xd0 | channel;
     buf[1] = value & 0x7f;
@@ -359,7 +393,6 @@ class MidiEngineImpl {
     const port = this.access.inputs.get(this.selectedInputId);
     if (!port) return;
     const handler = (e: MIDIMessageEvent): void => {
-      // Skip parsing entirely when no one's observing.
       if (this.eventListeners.size === 0) return;
       this.parseAndBroadcast(e, port);
     };
@@ -376,11 +409,6 @@ class MidiEngineImpl {
     };
   }
 
-  /**
-   * Broadcast a transient event (mutable shared object). Listeners must read
-   * fields synchronously and not retain a reference. Activity Monitor copies
-   * what it needs into its own ring buffer; Learn store inspects and bails.
-   */
   private broadcast(
     direction: 'in' | 'out',
     kind: MidiEventKind,
@@ -469,7 +497,6 @@ class MidiEngineImpl {
         }
     }
 
-    // raw is needed for sysex / unknown display only — allocate just for those.
     const needsRaw = kind === 'sysex' || kind === 'unknown';
     const raw = needsRaw ? Array.from(data) : undefined;
 

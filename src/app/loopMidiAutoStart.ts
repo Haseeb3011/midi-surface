@@ -24,16 +24,18 @@ function hasOutputPort(): boolean {
   return useMidiStore.getState().ports.some((p) => p.type === 'output');
 }
 
-function refreshPorts(): void {
-  useMidiStore.getState().refreshPorts();
+async function refreshPorts(): Promise<void> {
+  await useMidiStore.getState().refreshPorts();
 }
 
 function waitForPortsOrTimeout(ms: number): Promise<void> {
   return new Promise((resolve) => {
     let done = false;
     const interval = window.setInterval(() => {
-      refreshPorts();
-      if (hasOutputPort()) finish();
+      void (async () => {
+        await refreshPorts();
+        if (hasOutputPort()) finish();
+      })();
     }, 250);
     const finish = (): void => {
       if (done) return;
@@ -71,12 +73,12 @@ async function launchLoopMidi(): Promise<boolean> {
 /** Returns true iff a port is visible after the auto-start attempt. */
 export async function tryAutoStartLoopMidi(): Promise<boolean> {
   if (!isTauri()) return false;
-  refreshPorts();
+  await refreshPorts();
   if (hasOutputPort()) return true;
 
   // Give the OS a moment to settle in case loopMIDI is already running.
   await waitForPortsOrTimeout(1500);
-  refreshPorts();
+  await refreshPorts();
   if (hasOutputPort()) return true;
 
   // Try to spawn it.
@@ -85,7 +87,7 @@ export async function tryAutoStartLoopMidi(): Promise<boolean> {
 
   // Wait briefly for it to surface its ports.
   await waitForPortsOrTimeout(3000);
-  refreshPorts();
+  await refreshPorts();
   return hasOutputPort();
 }
 
@@ -94,5 +96,5 @@ export async function launchLoopMidiManual(): Promise<void> {
   if (!isTauri()) return;
   await launchLoopMidi();
   await waitForPortsOrTimeout(3000);
-  refreshPorts();
+  await refreshPorts();
 }

@@ -1,5 +1,5 @@
 /*
-  midiStore — port state only. No event buffer here anymore.
+  midiStore — port state only. No event buffer here.
 
   Live MIDI events are NOT pushed through Zustand. The MidiEngine fires
   listeners only when there are subscribers (Activity Monitor mounted, or
@@ -18,7 +18,7 @@ interface MidiState {
 
   setOutput: (id: string | null) => void;
   setInput: (id: string | null) => void;
-  refreshPorts: () => void;
+  refreshPorts: () => Promise<void>;
 }
 
 export const useMidiStore = create<MidiState>((set) => ({
@@ -34,8 +34,8 @@ export const useMidiStore = create<MidiState>((set) => ({
     midi.selectInput(id);
     set({ inputId: id });
   },
-  refreshPorts: () => {
-    void midi.refreshNativeOutputs();
+  refreshPorts: async () => {
+    await midi.refreshNativeOutputs();
     set({ ports: midi.listPorts() });
   },
 }));
@@ -49,13 +49,15 @@ export function bootstrapMidiStore(): void {
   midi.onPortsChanged((ports) => {
     useMidiStore.setState({ ports });
     const state = useMidiStore.getState();
-    const outputStillExists = ports.some((p) => p.type === 'output' && p.id === state.outputId);
-    if (!state.outputId || !outputStillExists) {
+    const persistedExists = ports.some((p) => p.type === 'output' && p.id === state.outputId);
+    if (!state.outputId || !persistedExists) {
+      // Prefer a port whose name looks like a loopMIDI / "MIDI Surface" virtual
+      // port. Fall back to any connected output.
       const guess =
         ports.find((p) => p.type === 'output' && /loop|midi surface/i.test(p.name)) ??
         ports.find((p) => p.type === 'output' && p.state === 'connected');
       if (guess) state.setOutput(guess.id);
     }
   });
-  void midi.refreshNativeOutputs();
+  void useMidiStore.getState().refreshPorts();
 }

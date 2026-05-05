@@ -28,7 +28,7 @@ export async function selectNativeMidiOutput(id: number | null): Promise<void> {
   try {
     await invoke('native_midi_select_output', { id });
   } catch {
-    /* best-effort fallback path */
+    /* device may have just disappeared — next refresh will re-pick */
   }
 }
 

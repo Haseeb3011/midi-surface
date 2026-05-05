@@ -95,7 +95,7 @@ export const MidiStatus = memo(function MidiStatus({ status, onStatusChange }: P
       await launchLoopMidiManual();
       const next = await checkMidiSupport();
       onStatusChange(next);
-      useMidiStore.getState().refreshPorts();
+      await useMidiStore.getState().refreshPorts();
     } finally {
       setBusy(false);
     }
@@ -107,7 +107,7 @@ export const MidiStatus = memo(function MidiStatus({ status, onStatusChange }: P
       await midi.ensureAccess();
       const next = await checkMidiSupport();
       onStatusChange(next);
-      useMidiStore.getState().refreshPorts();
+      await useMidiStore.getState().refreshPorts();
     } finally {
       setBusy(false);
     }
