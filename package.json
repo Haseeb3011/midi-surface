@@ -1,7 +1,7 @@
 {
   "name": "midi-surface",
   "private": true,
-  "version": "0.0.1",
+  "version": "0.1.0",
   "type": "module",
   "description": "Touch-first MIDI control surface (Vital-inspired) — PWA for Windows 2-in-1, sends MIDI through loopMIDI to FL Studio / Ableton Live.",
   "scripts": {
