@@ -11,6 +11,11 @@ import { create } from 'zustand';
 import type { MidiPortInfo } from '@/features/midi-engine/types';
 import { midi } from '@/features/midi-engine/MidiEngine';
 
+// Windows built-in MIDI devices that are never useful as a DAW target.
+// They are still shown in the output picker so the user can manually choose
+// them, but auto-select skips them in favour of a real virtual port.
+const SYSTEM_MIDI_RE = /microsoft gs wavetable|microsoft midi mapper/i;
+
 interface MidiState {
   ports: MidiPortInfo[];
   outputId: string | null;
@@ -49,13 +54,24 @@ export function bootstrapMidiStore(): void {
   midi.onPortsChanged((ports) => {
     useMidiStore.setState({ ports });
     const state = useMidiStore.getState();
-    const persistedExists = ports.some((p) => p.type === 'output' && p.id === state.outputId);
-    if (!state.outputId || !persistedExists) {
-      // Prefer a port whose name looks like a loopMIDI / "MIDI Surface" virtual
-      // port. Fall back to any connected output.
+
+    const currentPort = ports.find((p) => p.type === 'output' && p.id === state.outputId);
+    const persistedExists = !!currentPort;
+    // True if current selection is already a preferred virtual port.
+    const currentIsPreferred = persistedExists && /loop|midi surface/i.test(currentPort!.name);
+    // True if a preferred virtual port just became available.
+    const preferredAvailable = ports.some(
+      (p) => p.type === 'output' && /loop|midi surface/i.test(p.name),
+    );
+
+    // Re-pick when: no selection, selection disappeared, or a preferred port
+    // arrived while we were stuck on a system fallback (GS Wavetable, etc.).
+    if (!state.outputId || !persistedExists || (!currentIsPreferred && preferredAvailable)) {
       const guess =
         ports.find((p) => p.type === 'output' && /loop|midi surface/i.test(p.name)) ??
-        ports.find((p) => p.type === 'output' && p.state === 'connected');
+        ports.find(
+          (p) => p.type === 'output' && p.state === 'connected' && !SYSTEM_MIDI_RE.test(p.name),
+        );
       if (guess) state.setOutput(guess.id);
     }
   });

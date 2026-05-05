@@ -98,12 +98,13 @@ GIT_COMMITTER_NAME="Haseeb3011" GIT_COMMITTER_EMAIL="haseeb309786@gmail.com" \
 git commit -m "..."
 ```
 
-### **Push policy — STRICT**
+### **Push & release policy — STRICT**
 
-- **Never push, force-push, or upload to GitHub without an explicit user instruction.** Local commits are fine; remote sync is gated.
-- When the user instructs "push" / "upload" / "update GitHub" / "ship":
-  1. Push commits to `origin/main`.
-  2. **Also update the GitHub release** for the current `package.json` version: rebuild if not already fresh, then upload `midi-surface.exe`, `MIDI Surface_<ver>_x64-setup.exe` (NSIS), and `MIDI Surface_<ver>_x64_en-US.msi` (if built) via `gh release upload <tag> <files> --clobber` (or `gh release create <tag> <files>` if the tag doesn't exist). Use the version from `package.json` and tag `v<version>`.
+- **Always commit** at meaningful checkpoints (see Commit cadence below). Commits go to `origin/main` automatically — no user gate on committing or pushing code.
+- **Release artifact uploads are gated.** Never upload executables / installers to a GitHub Release without an explicit user instruction ("upload the release", "ship it", "update the release section", etc.).
+- When the user instructs a release upload:
+  1. Ensure latest build artifacts are fresh (rebuild if needed).
+  2. Upload `midi-surface.exe`, `MIDI Surface_<ver>_x64-setup.exe` (NSIS), and `MIDI Surface_<ver>_x64_en-US.msi` via `gh release upload v<ver> <files> --clobber` (or `gh release create v<ver> <files>` if tag doesn't exist). Use version from `package.json`.
 - Never bypass hooks (`--no-verify`) or signing flags unless explicitly asked.
 - Never modify global git config.
 
@@ -267,8 +268,8 @@ Layered defenses:
 1. **Always read this file end-to-end at session start** — especially §3, §8, §11, §14, §15.
 2. **Never start coding without an approved plan.** For any non-trivial change, present the plan first and wait for explicit approval.
 3. **Ask before executing anything with side effects** — installs, builds, file writes outside the immediate task, deletions, restarts, anything destructive. Read-only investigation (Read/Grep/Glob) does not require asking.
-4. **Never push to GitHub or upload release artifacts without an explicit user instruction.** Local commits are OK. Remote sync requires the user to say "push" / "upload" / "update GitHub" / "ship".
-5. **When the user does say to push:** push commits to `origin/main` AND update the GitHub release (`gh release upload v<ver> <files> --clobber` for the version in `package.json`, attaching the standalone exe + NSIS + MSI from `C:\midi-build\release\` and its `bundle/` subfolders).
+4. **Always commit and push code** after a completed sub-phase or meaningful fix. No user gate needed for `git commit` + `git push`.
+5. **Never upload release artifacts to GitHub Releases without an explicit user instruction.** When instructed: `gh release upload v<ver> <files> --clobber` attaching standalone exe + NSIS + MSI from the freshest build dir.
 6. **Never add features beyond the locked plan** without asking. Open questions in §15 must be resolved with the user before proceeding.
 7. **Default to terse output.** No emoji unless the user asks.
 8. **Validate before claiming done.** `npm run typecheck` AND `npm run tauri:build` (or `npm run build` for browser-only) must pass. Never mark complete on a failed check.
@@ -284,7 +285,8 @@ Layered defenses:
 2. Update §11 (mark done).
 3. Add §14 changelog entry: date + substantive summary.
 4. Commit (HEREDOC, env-var identity, Co-Authored-By).
-5. **STOP. Do not push.** Wait for user instruction before any `git push` or release upload.
+5. Push to `origin/main`.
+6. **STOP on releases.** Do not upload artifacts to GitHub Releases without an explicit user instruction.
 
 ### Forbidden actions
 
@@ -295,12 +297,13 @@ Layered defenses:
 - Force-push to `main`.
 - Skip hooks (`--no-verify`) without explicit instruction.
 - Bundle large binaries or unused deps — standalone exe must stay under 5 MB.
-- Push to GitHub or upload release artifacts without explicit user instruction.
+- Upload release artifacts to GitHub Releases without explicit user instruction.
 
 ## 14. Changelog
 
 | Date | Change | By |
 |---|---|---|
+| 2026-05-06 | **NSIS winget-install removed; auto-select hardened.** Removed `winget install TobiasErichsen.loopMIDI` from `NSIS_HOOK_POSTINSTALL` — the silent install was corrupting existing loopMIDI/teVirtualMIDI driver registrations, making ports invisible to WinMM and FL Studio even though loopMIDI UI showed them as active. The cfg-seed step is kept (safe, additive). In-app "download loopMIDI" button in the status-pill popover remains the install path. Fixed `bootstrapMidiStore` auto-select: now upgrades to a loopMIDI/MIDI-Surface port when one appears even if GS Wavetable was already selected; never auto-selects Microsoft GS Wavetable Synth or Microsoft MIDI Mapper (shown in picker for manual override only). | Claude |
 | 2026-05-06 | **Phase 5.0 — WinMM-only desktop transport.** Removed dual Web MIDI + native fallback. `MidiEngine` now platform-splits: Tauri uses WinMM exclusively for outputs; Web MIDI used only for inputs (Learn / Activity Monitor) and gracefully tolerates failure. Browser PWA still uses Web MIDI for both. Fixes: duplicate loopMIDI ports in the picker, silent send-no-ops when persisted id mismatched the active backend, WebView2's intermittent zero-output enumeration. `midiStore.refreshPorts` is now async; `loopMidiAutoStart` polling awaits it so the next-tick check sees authoritative state. **Repo hygiene:** `.bat` files (`run.bat`, `dev.bat`, `build.bat`) untracked + gitignored as user-machine-specific. **AI_CONTEXT** rewritten/compressed; tightened push policy (no GitHub push or release upload without explicit user instruction; releases must be updated with fresh artifacts when pushing). | Claude |
 | 2026-05-05 | **Native Windows MIDI output fallback.** User showed loopMIDI running with a `MIDI Surface` port while the app still displayed `no MIDI port`, proving WebView2/Web MIDI had access but returned zero outputs. Added Tauri WinMM bridge (`src-tauri/src/native_midi.rs` + `src/app/nativeMidi.ts` + `MidiEngine` integration). Validated; native ports exposed as `native:<id>`. *Superseded by 2026-05-06 (fallback removed; WinMM is now the sole desktop output path).* | Codex |
 | 2026-05-05 | **loopMIDI detection hardening + redistribution decision.** Auto-start launched loopMIDI but relied on Web MIDI `onstatechange`; if that didn't fire, header stuck at `no MIDI port`. Updated `loopMidiAutoStart` to poll/refresh during the wait window; `App.tsx` refreshes ports/status after `tryAutoStartLoopMidi()` resolves. loopMIDI/virtualMIDI redistribution permission unconfirmed → keep winget+download flow. | Codex |
@@ -353,14 +356,15 @@ Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>
 EOF
 )"
 
-# 5) STOP. Do NOT push or upload to GitHub without an explicit user instruction.
-#    When the user does say to push:
-#       git push
+# 5) Push immediately after commit — no user gate needed for code pushes
+git push
+
+# 6) Release artifacts — ONLY when user explicitly says to upload/ship the release:
 #       VER=$(node -p "require('./package.json').version")
 #       gh release upload "v$VER" \
-#         "C:/midi-build/release/midi-surface.exe" \
-#         "C:/midi-build/release/bundle/nsis/MIDI Surface_${VER}_x64-setup.exe" \
-#         "C:/midi-build/release/bundle/msi/MIDI Surface_${VER}_x64_en-US.msi" \
+#         "C:/midi-build-fresh/release/midi-surface.exe" \
+#         "C:/midi-build-fresh/release/bundle/nsis/MIDI Surface_${VER}_x64-setup.exe" \
+#         "C:/midi-build-fresh/release/bundle/msi/MIDI Surface_${VER}_x64_en-US.msi" \
 #         --clobber
 #       # (or `gh release create v$VER <files> --title "..." --notes "..."` if tag missing)
 ```
