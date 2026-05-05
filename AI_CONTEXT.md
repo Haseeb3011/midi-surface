@@ -202,6 +202,14 @@ NSIS does not copy that sibling DLL automatically, so
 `NSIS_HOOK_PREINSTALL`. Do not remove that hook unless the app is switched to
 a build mode that no longer needs the loader DLL.
 
+loopMIDI ports exist only while `loopMIDI.exe` is running. Do not rely solely
+on Web MIDI `onstatechange` after auto-starting loopMIDI; refresh the MIDI port
+list explicitly while waiting for the port to appear.
+
+Do not bundle the loopMIDI binary directly unless Tobias Erichsen grants
+redistribution permission. The official pages describe loopMIDI/virtualMIDI as
+copyrighted software, and no redistribution license has been confirmed.
+
 ### Performance / zero-alloc invariants — DO NOT REGRESS
 
 - `MidiEngine.send*()` methods reuse pre-allocated `Uint8Array(2)` and `Uint8Array(3)` buffers. Never allocate per-send.
@@ -314,6 +322,7 @@ Layered defenses, top to bottom:
 
 | Date | Change | By |
 |---|---|---|
+| 2026-05-05 | **loopMIDI detection hardening + redistribution decision.** User reported the app was not detecting the loopMIDI port. Local inspection showed loopMIDI installed at `C:\Program Files (x86)\Tobias Erichsen\loopMIDI\loopMIDI.exe`, config seeded at `%APPDATA%\loopMIDI\loopMIDI.cfg`, and official documentation says ports exist only while loopMIDI is running. Root cause in app flow: auto-start launched loopMIDI but then relied on Web MIDI `onstatechange`; if that event did not fire, the header stayed at `no MIDI port` until manual refresh. Updated `src/app/loopMidiAutoStart.ts` to poll/refresh ports during the wait window and after launch, and updated `App.tsx` to refresh ports/status after `tryAutoStartLoopMidi()` resolves. Also checked official loopMIDI/virtualMIDI pages and found no confirmed redistribution permission, so bundling loopMIDI directly remains blocked pending explicit permission from Tobias Erichsen; keep winget/download flow or replace with a permissioned installer strategy later. | Codex |
 | 2026-05-05 | **Fixed NSIS setup missing `WebView2Loader.dll`.** User hit `midi-surface.exe - System Error` after installing the NSIS setup: `WebView2Loader.dll was not found`. Root cause: the GNU Tauri release folder had `WebView2Loader.dll` beside `midi-surface.exe`, and MSI included it, but the generated NSIS script copied only the main exe. Added `NSIS_HOOK_PREINSTALL` in `src-tauri/windows/installer-hooks.nsh` to copy `$%CARGO_TARGET_DIR%\release\WebView2Loader.dll` into `$INSTDIR` as `WebView2Loader.dll`. Rebuilt into `C:\midi-build-fixed`; fixed NSIS installer size 1,693,647 bytes. Silent-installed the fixed setup successfully; verified `%LOCALAPPDATA%\MIDI Surface` now contains `midi-surface.exe`, `uninstall.exe`, and `WebView2Loader.dll`; launched the installed exe successfully with window title `MIDI Surface`. | Codex |
 | 2026-05-05 | **Release-prep audit + fresh artifacts.** Read this context first, reviewed the Tauri release path, and found the existing MSI in `C:\midi-build` was stale from 2026-04-30 while the exe/NSIS were newer. A rebuild in `C:\midi-build` refreshed the exe and NSIS but MSI bundling failed with Windows `Access is denied. (os error 5)` because `msiexec` held the old MSI and could not be stopped from the current shell. Built successfully into `C:\midi-build-fresh` instead: standalone `midi-surface.exe` (4,247,552 bytes), NSIS `MIDI Surface_0.1.0_x64-setup.exe` (1,628,222 bytes), and MSI `MIDI Surface_0.1.0_x64_en-US.msi` (2,342,912 bytes), all timestamped 2026-05-05 19:48. Also aligned npm package metadata to `0.1.0` and added the missing PWA icon assets under `public/icons/` so the browser fallback manifest resolves. Validation: `npm run typecheck`, `npm run build`, and `npm run tauri:build` all green. Launched the fresh standalone exe for user testing. | Codex |
 | 2026-04-29 | Initial context file created with preliminary scope, open questions, and proposed stack. | Claude |

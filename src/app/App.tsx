@@ -70,7 +70,12 @@ export function App() {
         // Best-effort: if no output port appears on its own, try to launch
         // loopMIDI from its known install path. Silent no-op when not under
         // Tauri or when loopMIDI isn't installed.
-        void tryAutoStartLoopMidi();
+        void (async () => {
+          await tryAutoStartLoopMidi();
+          if (cancelled) return;
+          useMidiStore.getState().refreshPorts();
+          setStatus(await checkMidiSupport());
+        })();
       }
     })();
     void bootstrapLayoutStore();
