@@ -34,7 +34,10 @@ export const useMidiStore = create<MidiState>((set) => ({
     midi.selectInput(id);
     set({ inputId: id });
   },
-  refreshPorts: () => set({ ports: midi.listPorts() }),
+  refreshPorts: () => {
+    void midi.refreshNativeOutputs();
+    set({ ports: midi.listPorts() });
+  },
 }));
 
 let initialized = false;
@@ -46,11 +49,13 @@ export function bootstrapMidiStore(): void {
   midi.onPortsChanged((ports) => {
     useMidiStore.setState({ ports });
     const state = useMidiStore.getState();
-    if (!state.outputId) {
+    const outputStillExists = ports.some((p) => p.type === 'output' && p.id === state.outputId);
+    if (!state.outputId || !outputStillExists) {
       const guess =
         ports.find((p) => p.type === 'output' && /loop|midi surface/i.test(p.name)) ??
         ports.find((p) => p.type === 'output' && p.state === 'connected');
       if (guess) state.setOutput(guess.id);
     }
   });
+  void midi.refreshNativeOutputs();
 }

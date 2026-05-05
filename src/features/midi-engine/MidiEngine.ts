@@ -21,6 +21,13 @@
 */
 
 import type { MidiChannel, MidiEvent, MidiEventKind, MidiPortInfo } from './types';
+import {
+  listNativeMidiOutputs,
+  nativeMidiId,
+  parseNativeMidiId,
+  selectNativeMidiOutput,
+  sendNativeMidiShort,
+} from '@/app/nativeMidi';
 
 export interface MidiSupportStatus {
   supported: boolean;
@@ -37,6 +44,7 @@ class MidiEngineImpl {
   private selectedOutputId: string | null = null;
   private selectedInputId: string | null = null;
   private inputHandler: ((e: MIDIMessageEvent) => void) | null = null;
+  private nativeOutputs: MidiPortInfo[] = [];
 
   private portsListeners = new Set<Listener<MidiPortInfo[]>>();
   private eventListeners = new Set<Listener<MidiEvent>>();
@@ -67,8 +75,14 @@ class MidiEngineImpl {
   }
 
   async checkSupport(): Promise<MidiSupportStatus> {
+    await this.refreshNativeOutputs();
     if (typeof navigator === 'undefined' || !('requestMIDIAccess' in navigator)) {
-      return { supported: false, state: 'unsupported', inputs: 0, outputs: 0 };
+      return {
+        supported: this.nativeOutputs.length > 0,
+        state: this.nativeOutputs.length > 0 ? 'granted' : 'unsupported',
+        inputs: 0,
+        outputs: this.nativeOutputs.length,
+      };
     }
     try {
       const access = await this.ensureAccess();
@@ -76,7 +90,7 @@ class MidiEngineImpl {
         supported: true,
         state: 'granted',
         inputs: access.inputs.size,
-        outputs: access.outputs.size,
+        outputs: access.outputs.size + this.nativeOutputs.length,
       };
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -94,11 +108,24 @@ class MidiEngineImpl {
   // ---- ports ----------------------------------------------------------------
 
   listPorts(): MidiPortInfo[] {
-    if (!this.access) return [];
+    if (!this.access) return this.nativeOutputs;
     const out: MidiPortInfo[] = [];
     for (const p of this.access.inputs.values()) out.push(this.toInfo(p, 'input'));
     for (const p of this.access.outputs.values()) out.push(this.toInfo(p, 'output'));
+    out.push(...this.nativeOutputs);
     return out;
+  }
+
+  async refreshNativeOutputs(): Promise<void> {
+    const outputs = await listNativeMidiOutputs();
+    this.nativeOutputs = outputs.map((p) => ({
+      id: nativeMidiId(p.id),
+      name: p.name,
+      manufacturer: 'Windows MIDI',
+      state: 'connected',
+      type: 'output',
+    }));
+    this.emitPorts();
   }
 
   onPortsChanged(listener: Listener<MidiPortInfo[]>): () => void {
@@ -128,6 +155,7 @@ class MidiEngineImpl {
 
   selectOutput(id: string | null): void {
     this.selectedOutputId = id;
+    void selectNativeMidiOutput(parseNativeMidiId(id));
   }
 
   getSelectedOutputId(): string | null {
@@ -136,7 +164,13 @@ class MidiEngineImpl {
 
   private getOutput(): MIDIOutput | null {
     if (!this.access || !this.selectedOutputId) return null;
+    if (parseNativeMidiId(this.selectedOutputId) !== null) return null;
     return this.access.outputs.get(this.selectedOutputId) ?? null;
+  }
+
+  private getSelectedNativeOutput(): MidiPortInfo | null {
+    if (parseNativeMidiId(this.selectedOutputId) === null) return null;
+    return this.nativeOutputs.find((p) => p.id === this.selectedOutputId) ?? null;
   }
 
   /** Generic 1..N byte send. Allocates only if an arbitrary array is passed. */
@@ -148,7 +182,23 @@ class MidiEngineImpl {
 
   noteOn(channel: MidiChannel, note: number, velocity = 100): void {
     const out = this.getOutput();
-    if (!out) return;
+    if (!out) {
+      const native = this.getSelectedNativeOutput();
+      if (!native) return;
+      sendNativeMidiShort(0x90 | channel, note, velocity);
+      if (this.eventListeners.size > 0) {
+        this.broadcast(
+          'out',
+          velocity === 0 ? 'noteOff' : 'noteOn',
+          channel,
+          note,
+          velocity,
+          native.id,
+          native.name,
+        );
+      }
+      return;
+    }
     const buf = this.out3;
     buf[0] = 0x90 | channel;
     buf[1] = note & 0x7f;
@@ -169,7 +219,15 @@ class MidiEngineImpl {
 
   noteOff(channel: MidiChannel, note: number, velocity = 0): void {
     const out = this.getOutput();
-    if (!out) return;
+    if (!out) {
+      const native = this.getSelectedNativeOutput();
+      if (!native) return;
+      sendNativeMidiShort(0x80 | channel, note, velocity);
+      if (this.eventListeners.size > 0) {
+        this.broadcast('out', 'noteOff', channel, note, velocity, native.id, native.name);
+      }
+      return;
+    }
     const buf = this.out3;
     buf[0] = 0x80 | channel;
     buf[1] = note & 0x7f;
@@ -182,7 +240,15 @@ class MidiEngineImpl {
 
   cc(channel: MidiChannel, cc: number, value: number): void {
     const out = this.getOutput();
-    if (!out) return;
+    if (!out) {
+      const native = this.getSelectedNativeOutput();
+      if (!native) return;
+      sendNativeMidiShort(0xb0 | channel, cc, value);
+      if (this.eventListeners.size > 0) {
+        this.broadcast('out', 'cc', channel, cc, value, native.id, native.name);
+      }
+      return;
+    }
     const buf = this.out3;
     buf[0] = 0xb0 | channel;
     buf[1] = cc & 0x7f;
@@ -195,8 +261,18 @@ class MidiEngineImpl {
 
   pitchBend(channel: MidiChannel, value14: number): void {
     const out = this.getOutput();
-    if (!out) return;
     const v = Math.max(0, Math.min(0x3fff, value14 | 0));
+    if (!out) {
+      const native = this.getSelectedNativeOutput();
+      if (!native) return;
+      const lsb = v & 0x7f;
+      const msb = (v >> 7) & 0x7f;
+      sendNativeMidiShort(0xe0 | channel, lsb, msb);
+      if (this.eventListeners.size > 0) {
+        this.broadcast('out', 'pitchBend', channel, lsb, msb, native.id, native.name);
+      }
+      return;
+    }
     const buf = this.out3;
     buf[0] = 0xe0 | channel;
     buf[1] = v & 0x7f;
@@ -209,7 +285,15 @@ class MidiEngineImpl {
 
   programChange(channel: MidiChannel, program: number): void {
     const out = this.getOutput();
-    if (!out) return;
+    if (!out) {
+      const native = this.getSelectedNativeOutput();
+      if (!native) return;
+      sendNativeMidiShort(0xc0 | channel, program, 0);
+      if (this.eventListeners.size > 0) {
+        this.broadcast('out', 'programChange', channel, program, undefined, native.id, native.name);
+      }
+      return;
+    }
     const buf = this.out2;
     buf[0] = 0xc0 | channel;
     buf[1] = program & 0x7f;
@@ -221,7 +305,15 @@ class MidiEngineImpl {
 
   channelPressure(channel: MidiChannel, value: number): void {
     const out = this.getOutput();
-    if (!out) return;
+    if (!out) {
+      const native = this.getSelectedNativeOutput();
+      if (!native) return;
+      sendNativeMidiShort(0xd0 | channel, value, 0);
+      if (this.eventListeners.size > 0) {
+        this.broadcast('out', 'channelPressure', channel, value, undefined, native.id, native.name);
+      }
+      return;
+    }
     const buf = this.out2;
     buf[0] = 0xd0 | channel;
     buf[1] = value & 0x7f;
