@@ -1,7 +1,9 @@
+import { useRef } from 'react';
 import { useMidiStore } from '@/store/midiStore';
 import { useSettingsStore, THEME_NAMES, type ThemeName } from '@/store/settingsStore';
 import type { MidiChannel } from '@/features/midi-engine/types';
 import { midi } from '@/features/midi-engine/MidiEngine';
+import { exportSettings, importSettings } from '@/app/settingsIO';
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <div className="space-y-2">
@@ -31,6 +33,7 @@ const THEME_LABELS: Record<ThemeName, string> = {
 };
 
 export function SettingsPanel({ onClose }: { onClose: () => void }) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const ports = useMidiStore((s) => s.ports);
   const outputId = useMidiStore((s) => s.outputId);
   const inputId = useMidiStore((s) => s.inputId);
@@ -208,6 +211,40 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
           <p className="font-sans text-[12px] leading-relaxed text-textSoft">
             A–L row plays white keys, W/E/T/Y/U/O/P black. Z/X shift octave, C/V shift velocity.
           </p>
+        </Section>
+
+        <Section title="Hotkeys">
+          <p className="font-sans text-[12px] leading-relaxed text-textSoft">
+            Space play · R record · P perf mode · Esc exit fullscreen/perf · 1–4 pad bank
+          </p>
+        </Section>
+
+        <Section title="Data">
+          <button
+            type="button"
+            onClick={exportSettings}
+            className="w-full rounded-md border border-borderSoft bg-surfaceLow px-3 py-2 font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-muted transition hover:bg-surfaceHi hover:text-text"
+          >
+            Export settings
+          </button>
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="w-full rounded-md border border-borderSoft bg-surfaceLow px-3 py-2 font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-muted transition hover:bg-surfaceHi hover:text-text"
+          >
+            Import settings
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json,application/json"
+            className="sr-only"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) void importSettings(file);
+              e.target.value = '';
+            }}
+          />
         </Section>
       </div>
     </div>

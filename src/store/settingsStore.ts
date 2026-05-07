@@ -30,6 +30,8 @@ interface SettingsState {
   pianoOctaves: number;
   /** Piano keyboard height in px. */
   pianoHeight: number;
+  /** Perf mode: hide header chrome so the surface fills the screen. Toggle with P. */
+  perfMode: boolean;
 
   setOutputId: (id: string | null) => void;
   setInputId: (id: string | null) => void;
@@ -41,6 +43,7 @@ interface SettingsState {
   setTheme: (t: SettingsState['theme']) => void;
   setPianoOctaves: (n: number) => void;
   setPianoHeight: (h: number) => void;
+  setPerfMode: (v: boolean) => void;
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -56,6 +59,7 @@ export const useSettingsStore = create<SettingsState>()(
       theme: 'landr' as ThemeName,
       pianoOctaves: 3,
       pianoHeight: 200,
+      perfMode: false,
 
       setOutputId: (id) => set({ outputId: id }),
       setInputId: (id) => set({ inputId: id }),
@@ -67,10 +71,11 @@ export const useSettingsStore = create<SettingsState>()(
       setTheme: (theme) => set({ theme }),
       setPianoOctaves: (n) => set({ pianoOctaves: Math.max(1, Math.min(7, Math.round(n))) }),
       setPianoHeight: (h) => set({ pianoHeight: Math.max(100, Math.min(360, Math.round(h))) }),
+      setPerfMode: (perfMode) => set({ perfMode }),
     }),
     {
       name: 'midi-surface-settings',
-      version: 3,
+      version: 4,
       storage: createJSONStorage(() => debouncedLocalStorage(300)),
       migrate: (persisted, version) => {
         const s = (persisted ?? {}) as Partial<SettingsState>;
@@ -79,6 +84,7 @@ export const useSettingsStore = create<SettingsState>()(
           const legacyTheme = (s.theme as string | undefined) ?? 'landr';
           s.theme = (legacyTheme === 'default' ? 'landr' : legacyTheme) as ThemeName;
         }
+        s.perfMode ??= false;
         return s as SettingsState;
       },
     },

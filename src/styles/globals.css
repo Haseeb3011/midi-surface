@@ -243,6 +243,11 @@
       inset 0 0 0 1px hsl(var(--btn-hue) 88% 60% / 0.4);
   }
 
+  /* Perf mode: chrome-free playing surface. Header hidden; content fills viewport. */
+  [data-perf-mode] header {
+    display: none;
+  }
+
   .glow-accent {
     box-shadow:
       0 0 0 1px rgb(var(--accent) / 0.4),

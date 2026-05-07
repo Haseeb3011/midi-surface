@@ -30,6 +30,8 @@ interface LearnState {
   unassign: (controlId: string) => void;
   /** Capture the next learnable event into the armed control. Returns true if applied. */
   captureFromEvent: (e: MidiEvent) => boolean;
+  /** Bulk-restore assignments (used by settings import). */
+  setAssignments: (assignments: Record<string, LearnAssignment>) => void;
 }
 
 function eventToTarget(e: MidiEvent): LearnTarget | null {
@@ -71,6 +73,7 @@ export const useLearnStore = create<LearnState>()(
           delete next[controlId];
           return { assignments: next };
         }),
+      setAssignments: (assignments) => set({ assignments }),
       captureFromEvent: (e) => {
         const armed = get().armed;
         if (!armed || e.direction !== 'in') return false;

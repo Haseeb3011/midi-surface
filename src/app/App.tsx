@@ -16,6 +16,7 @@ import { useMidiStore, bootstrapMidiStore } from '@/store/midiStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useLearnStore } from '@/store/learnStore';
 import { useLayoutStore, bootstrapLayoutStore } from '@/store/layoutStore';
+import { useAppHotkeys } from '@/input/useAppHotkeys';
 
 type Pane = 'none' | 'settings' | 'activity' | 'presets';
 
@@ -39,6 +40,8 @@ export function App() {
 
   // Slim, granular store subscriptions — re-render only on the field that changes.
   const theme = useSettingsStore((s) => s.theme);
+  const perfMode = useSettingsStore((s) => s.perfMode);
+  const setPerfMode = useSettingsStore((s) => s.setPerfMode);
   const learnMode = useLearnStore((s) => s.learnMode);
   const toggleLearnMode = useLearnStore((s) => s.toggleLearnMode);
   const layout = useLayoutStore((s) => s.layout);
@@ -91,6 +94,14 @@ export function App() {
     else document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
+  // Sync perf mode to a data attribute so CSS can hide chrome without React re-renders.
+  useEffect(() => {
+    if (perfMode) document.documentElement.setAttribute('data-perf-mode', '');
+    else document.documentElement.removeAttribute('data-perf-mode');
+  }, [perfMode]);
+
+  useAppHotkeys();
+
   // Attach the learn listener ONLY when learn mode is on.
   useEffect(() => {
     if (!learnMode) return;
@@ -135,6 +146,18 @@ export function App() {
         {/* Right: live MIDI status + action buttons */}
         <div className="flex shrink-0 items-center gap-1.5">
           <MidiStatus status={status} onStatusChange={setStatus} />
+          <button
+            type="button"
+            onPointerDown={(e) => {
+              e.preventDefault();
+              setPerfMode(!perfMode);
+            }}
+            title="Perf mode — hide chrome for distraction-free play (P)"
+            className="header-btn"
+            data-active={perfMode ? 'true' : 'false'}
+          >
+            perf
+          </button>
           <button
             type="button"
             onPointerDown={(e) => {
