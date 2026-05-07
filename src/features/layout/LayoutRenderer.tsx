@@ -17,42 +17,52 @@ import {
 } from '@dnd-kit/core';
 import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable';
 import { restrictToParentElement } from '@dnd-kit/modifiers';
-import { Transport } from '@/features/transport/Transport';
-import { KnobRow } from '@/features/knobs/KnobRow';
 import { FaderRow } from '@/features/faders/FaderRow';
-import { PadGrid } from '@/features/pads/PadGrid';
 import { Wheels } from '@/features/pitchbend-modwheel/Wheels';
 import { PianoKeyboard } from '@/features/keyboard/PianoKeyboard';
 import { ActivityMonitor } from '@/features/activity-monitor/ActivityMonitor';
+import { EncoderStrip } from '@/features/surface/EncoderStrip';
+import { DisplayPanel } from '@/features/surface/DisplayPanel';
+import { TransportBar } from '@/features/surface/TransportBar';
+import { ModeButtons } from '@/features/surface/ModeButtons';
+import { PadZone } from '@/features/surface/PadZone';
+import { NavPanel } from '@/features/surface/NavPanel';
 import { ModuleWrapper } from './ModuleWrapper';
 import { useLayoutStore } from '@/store/layoutStore';
 import type { ModuleInstance, ModuleType } from './types';
 
 const MODULE_LABELS: Record<ModuleType, string> = {
-  transport: 'Transport',
-  knobs:     'Knobs',
-  faders:    'Faders',
-  pads:      'Pads',
-  wheels:    'Wheels',
-  keyboard:  'Keyboard',
-  activity:  'Activity',
+  encoders:        'Encoders',
+  display:         'Display',
+  'transport-bar': 'Transport',
+  'mode-buttons':  'Mode Buttons',
+  pads:            'Pads',
+  wheels:          'Wheels',
+  nav:             'Nav',
+  keyboard:        'Keyboard',
+  faders:          'Faders',
+  activity:        'Activity',
 };
 
 const ALL_MODULE_TYPES: ModuleType[] = [
-  'transport', 'knobs', 'faders', 'pads', 'wheels', 'keyboard', 'activity',
+  'encoders', 'display', 'transport-bar', 'mode-buttons',
+  'pads', 'wheels', 'nav', 'keyboard', 'faders', 'activity',
 ];
 
 function renderModuleContent(instance: ModuleInstance): React.ReactNode {
   const id = instance.id;
   switch (instance.type) {
-    case 'transport':  return <Transport />;
-    case 'knobs':      return <KnobRow moduleId={id} />;
-    case 'faders':     return <FaderRow moduleId={id} />;
-    case 'pads':       return <PadGrid moduleId={id} />;
-    case 'wheels':     return <Wheels />;
-    case 'keyboard':   return <PianoKeyboard />;
-    case 'activity':   return <ActivityMonitor />;
-    default:           return null;
+    case 'encoders':      return <EncoderStrip moduleId={id} />;
+    case 'display':       return <DisplayPanel />;
+    case 'transport-bar': return <TransportBar />;
+    case 'mode-buttons':  return <ModeButtons />;
+    case 'pads':          return <PadZone moduleId={id} layout={(instance.props as { layout?: '2x8' | '4x4' } | undefined)?.layout ?? '2x8'} />;
+    case 'wheels':        return <Wheels />;
+    case 'nav':           return <NavPanel />;
+    case 'keyboard':      return <PianoKeyboard />;
+    case 'faders':        return <FaderRow moduleId={id} />;
+    case 'activity':      return <ActivityMonitor />;
+    default:              return null;
   }
 }
 
@@ -73,7 +83,9 @@ function AddModulePicker({ pageId }: { pageId: string }) {
               addModule(pageId, {
                 id: `mod-${type}-${Date.now()}`,
                 type,
-                colSpan: type === 'transport' || type === 'keyboard' ? 4 : 2,
+                colSpan: type === 'encoders' || type === 'keyboard' ? 4
+                       : type === 'wheels' || type === 'nav' ? 1
+                       : 2,
               });
             }}
             className="

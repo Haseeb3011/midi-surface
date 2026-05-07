@@ -14,13 +14,16 @@ import { useLayoutStore } from '@/store/layoutStore';
 import type { ModuleInstance, ModuleType } from './types';
 
 const MODULE_LABELS: Record<ModuleType, string> = {
-  transport: 'Transport',
-  knobs:     'Knobs',
-  faders:    'Faders',
-  pads:      'Pads',
-  wheels:    'Wheels',
-  keyboard:  'Keyboard',
-  activity:  'Activity',
+  encoders:        'Encoders',
+  display:         'Display',
+  'transport-bar': 'Transport',
+  'mode-buttons':  'Mode Buttons',
+  pads:            'Pads',
+  wheels:          'Wheels',
+  nav:             'Nav',
+  keyboard:        'Keyboard',
+  faders:          'Faders',
+  activity:        'Activity',
 };
 
 interface Props {

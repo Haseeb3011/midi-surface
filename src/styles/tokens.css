@@ -1,39 +1,38 @@
 /*
-  Design tokens — single source of truth for colors, radii, spacing, elevation.
+  Design tokens — single source of truth for colors, radii, spacing.
 
   Color tokens are RGB triplets (no rgb() wrapper) so Tailwind's <alpha-value>
-  syntax works (see tailwind.config.ts). Themes override the full color palette
-  via [data-theme="..."] on <html>; structure (radii, spacing, elevation) is
-  theme-invariant.
+  syntax works (see tailwind.config.ts). Two themes:
 
-  Default theme = LANDR. The legacy 'default' string in settingsStore migrates
-  to 'landr' via the v3 persist-version bump.
+    :root            = Studio Dark  (warm black / coral — hardware-authentic dark)
+    [data-theme='studio-light']  = Studio Light (cream / coral — hardware-authentic light)
+
+  The default theme attribute on <html> is absent (dark). Light is opt-in via
+  data-theme="studio-light". Structure tokens (radii, spacing) are theme-invariant.
 */
 
 :root {
-  /* Color palette — LANDR (deep teal/blue, minimal) is the new default. */
-  --bg:            12 30 44;
-  --surface-low:   14 36 52;
-  --surface:       20 46 64;
-  --surface-hi:    30 60 82;
-  --border-soft:   30 58 80;
-  --border:        50 86 116;
-  --border-strong: 84 130 168;
-  --text:          220 232 244;
-  --text-soft:     156 184 208;
-  --muted:         108 142 170;
-  --accent:        88 200 232;   /* cyan-teal */
-  --accent-2:      96 134 255;   /* deep blue */
-
-  /* Status (theme-stable — same across all themes) */
-  --warn: 255 165 60;
-  --ok:   80 220 140;
+  /* Studio Dark — warm near-black, coral accent */
+  --bg:            14  12  10;
+  --surface-low:   10   8   6;
+  --surface:       22  18  14;
+  --surface-hi:    32  26  20;
+  --border-soft:   40  33  26;
+  --border:        58  48  38;
+  --border-strong: 88  72  56;
+  --text:          240 232 224;
+  --text-soft:     180 168 154;
+  --muted:         120 108  96;
+  --accent:        232  97  74;   /* coral */
+  --accent-2:      220 150  60;   /* warm amber */
+  --warn:          220 100  40;
+  --ok:             72 168  80;
 
   /* Radius scale */
-  --r-sm: 6px;
-  --r-md: 10px;
-  --r-lg: 14px;
-  --r-xl: 18px;
+  --r-sm:  4px;
+  --r-md:  8px;
+  --r-lg: 12px;
+  --r-xl: 16px;
 
   /* Spacing scale */
   --space-1: 4px;
@@ -42,70 +41,24 @@
   --space-4: 16px;
   --space-5: 24px;
 
-  /* Activity scalar (mutated by dynamic-accent system, currently a stub) */
+  /* Activity scalar (mutated by dynamic-accent system) */
   --activity: 0;
 }
 
-/* Vital — refined indigo / violet → magenta. */
-[data-theme='vital'] {
-  --bg:            10 10 22;
-  --surface-low:   16 16 28;
-  --surface:       22 22 38;
-  --surface-hi:    32 32 52;
-  --border-soft:   42 42 64;
-  --border:        62 60 96;
-  --border-strong: 92 88 132;
-  --text:          235 235 248;
-  --text-soft:     186 186 210;
-  --muted:         128 130 162;
-  --accent:        124 92 255;
-  --accent-2:      255 92 182;
-}
-
-/* Cyber — electric neon. */
-[data-theme='cyber'] {
-  --bg:            6 8 18;
-  --surface-low:   10 14 26;
-  --surface:       16 20 36;
-  --surface-hi:    24 30 52;
-  --border-soft:   32 40 70;
-  --border:        58 76 124;
-  --border-strong: 100 130 200;
-  --text:          230 244 255;
-  --text-soft:     160 200 230;
-  --muted:         108 144 184;
-  --accent:        0 240 255;
-  --accent-2:      255 80 180;
-}
-
-/* Sunset — warm orange / coral. */
-[data-theme='sunset'] {
-  --bg:            22 14 18;
-  --surface-low:   30 18 22;
-  --surface:       38 24 28;
-  --surface-hi:    52 32 38;
-  --border-soft:   62 38 44;
-  --border:        92 60 70;
-  --border-strong: 132 86 100;
-  --text:          250 234 226;
-  --text-soft:     220 184 170;
-  --muted:         184 138 124;
-  --accent:        255 120 60;
-  --accent-2:      255 60 140;
-}
-
-/* Mono — neutral grayscale. */
-[data-theme='mono'] {
-  --bg:            14 14 18;
-  --surface-low:   20 20 26;
-  --surface:       26 26 32;
-  --surface-hi:    36 36 44;
-  --border-soft:   46 46 54;
-  --border:        72 72 84;
-  --border-strong: 110 110 124;
-  --text:          240 240 246;
-  --text-soft:     192 192 204;
-  --muted:         140 140 152;
-  --accent:        220 220 235;
-  --accent-2:      160 160 180;
+/* Studio Light — warm cream, coral accent */
+[data-theme='studio-light'] {
+  --bg:            242 237 230;
+  --surface-low:   248 244 240;
+  --surface:       237 231 223;
+  --surface-hi:    229 221 212;
+  --border-soft:   210 200 190;
+  --border:        180 168 156;
+  --border-strong: 140 128 116;
+  --text:           26  20  16;
+  --text-soft:      90  78  68;
+  --muted:         140 128 116;
+  --accent:        232  97  74;   /* same coral */
+  --accent-2:      220 150  60;   /* same amber */
+  --warn:          200  80  20;
+  --ok:             52 148  60;
 }

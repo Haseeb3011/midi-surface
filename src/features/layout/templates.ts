@@ -1,9 +1,9 @@
 /*
   Built-in layout templates seeded into Dexie on first run.
 
-  Module IDs within built-in layouts are stable strings so MIDI Learn
-  assignments (keyed by controlId, not moduleId) aren't affected by layout
-  changes. Users can duplicate and edit these; the originals are read-only.
+  Module IDs are stable strings so MIDI Learn assignments survive layout changes.
+  These are the edit-mode module arrangements; the fixed SurfaceLayout component
+  renders the Launchkey-style hardware view in play mode.
 */
 
 import type { Layout } from './types';
@@ -19,12 +19,14 @@ export const DEFAULT_LAYOUT: Layout = {
       id: 'page-default-main',
       name: 'Main',
       modules: [
-        { id: 'mod-transport', type: 'transport', colSpan: 4 },
-        { id: 'mod-knobs',     type: 'knobs',     colSpan: 2 },
-        { id: 'mod-pads',      type: 'pads',      colSpan: 2 },
-        { id: 'mod-faders',    type: 'faders',    colSpan: 4 },
-        { id: 'mod-wheels',    type: 'wheels',    colSpan: 1 },
-        { id: 'mod-keyboard',  type: 'keyboard',  colSpan: 3 },
+        { id: 'mod-encoders',      type: 'encoders',      colSpan: 4 },
+        { id: 'mod-wheels',        type: 'wheels',        colSpan: 1 },
+        { id: 'mod-display',       type: 'display',       colSpan: 2 },
+        { id: 'mod-nav',           type: 'nav',           colSpan: 1 },
+        { id: 'mod-transport-bar', type: 'transport-bar', colSpan: 2 },
+        { id: 'mod-mode-buttons',  type: 'mode-buttons',  colSpan: 2 },
+        { id: 'mod-pads',          type: 'pads',          colSpan: 4, props: { layout: '2x8' } },
+        { id: 'mod-keyboard',      type: 'keyboard',      colSpan: 4 },
       ],
     },
   ],
@@ -41,11 +43,11 @@ export const DRUMS_LAYOUT: Layout = {
       id: 'page-drums-main',
       name: 'Drums',
       modules: [
-        { id: 'mod-pads-d', type: 'pads', colSpan: 4 },
-        { id: 'mod-knobs-d', type: 'knobs', colSpan: 2 },
-        { id: 'mod-wheels-d', type: 'wheels', colSpan: 2 },
-        { id: 'mod-faders-d', type: 'faders', colSpan: 4 },
-        { id: 'mod-transport-d', type: 'transport', colSpan: 4 },
+        { id: 'mod-encoders-d',  type: 'encoders',      colSpan: 4 },
+        { id: 'mod-pads-d',      type: 'pads',          colSpan: 3, props: { layout: '4x4' } },
+        { id: 'mod-nav-d',       type: 'nav',           colSpan: 1 },
+        { id: 'mod-transport-d', type: 'transport-bar', colSpan: 4 },
+        { id: 'mod-keyboard-d',  type: 'keyboard',      colSpan: 4 },
       ],
     },
   ],
@@ -62,10 +64,12 @@ export const KEYS_LAYOUT: Layout = {
       id: 'page-keys-main',
       name: 'Keys',
       modules: [
-        { id: 'mod-wheels-k',    type: 'wheels',    colSpan: 1 },
-        { id: 'mod-keyboard-k',  type: 'keyboard',  colSpan: 3 },
-        { id: 'mod-knobs-k',     type: 'knobs',     colSpan: 2 },
-        { id: 'mod-transport-k', type: 'transport', colSpan: 2 },
+        { id: 'mod-encoders-k',  type: 'encoders',      colSpan: 4 },
+        { id: 'mod-wheels-k',    type: 'wheels',        colSpan: 1 },
+        { id: 'mod-display-k',   type: 'display',       colSpan: 2 },
+        { id: 'mod-nav-k',       type: 'nav',           colSpan: 1 },
+        { id: 'mod-transport-k', type: 'transport-bar', colSpan: 4 },
+        { id: 'mod-keyboard-k',  type: 'keyboard',      colSpan: 4, props: { octaves: 5 } },
       ],
     },
   ],

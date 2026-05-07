@@ -14,22 +14,14 @@ const Section = ({ title, children }: { title: string; children: React.ReactNode
   </div>
 );
 
-// Static swatch palette for each theme — first triplet is bg, rest are accents.
-// Used purely for the picker preview; the live theme switch reads CSS vars.
 const THEME_PREVIEWS: Record<ThemeName, { bg: string; accent: string; accent2: string }> = {
-  landr:  { bg: '#0c1e2c', accent: '#58c8e8', accent2: '#6086ff' },
-  vital:  { bg: '#0a0a16', accent: '#7c5cff', accent2: '#ff5cb6' },
-  cyber:  { bg: '#060812', accent: '#00f0ff', accent2: '#ff50b4' },
-  sunset: { bg: '#160e12', accent: '#ff783c', accent2: '#ff3c8c' },
-  mono:   { bg: '#0e0e12', accent: '#dcdceb', accent2: '#a0a0b4' },
+  'studio-dark':  { bg: '#0e0c0a', accent: '#e8614a', accent2: '#dc963c' },
+  'studio-light': { bg: '#f2ede6', accent: '#e8614a', accent2: '#dc963c' },
 };
 
 const THEME_LABELS: Record<ThemeName, string> = {
-  landr:  'LANDR',
-  vital:  'Vital',
-  cyber:  'Cyber',
-  sunset: 'Sunset',
-  mono:   'Mono',
+  'studio-dark':  'Studio Dark',
+  'studio-light': 'Studio Light',
 };
 
 export function SettingsPanel({ onClose }: { onClose: () => void }) {

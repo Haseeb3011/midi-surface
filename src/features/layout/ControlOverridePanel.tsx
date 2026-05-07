@@ -31,7 +31,7 @@ interface ControlDef {
 
 function getControls(type: ModuleType): ControlDef[] {
   switch (type) {
-    case 'knobs':
+    case 'encoders':
       return Array.from({ length: 8 }, (_, i) => ({
         controlId: `knob:${i}`,
         defaultLabel: `K${i + 1}`,
@@ -52,7 +52,7 @@ function getControls(type: ModuleType): ControlDef[] {
         defaultChannel: PAD_CHANNEL,
         defaultNote: padNoteFor('A', i),
       }));
-    case 'transport':
+    case 'transport-bar':
       return (['play', 'stop', 'record', 'loop', 'metronome'] as TransportKey[]).map((k) => ({
         controlId: `transport:${k}`,
         defaultLabel: k.charAt(0).toUpperCase() + k.slice(1),

@@ -3,8 +3,7 @@ import { SettingsPanel } from '@/app/SettingsPanel';
 import { MidiStatus } from '@/app/MidiStatus';
 import { tryAutoStartLoopMidi } from '@/app/loopMidiAutoStart';
 import { ActivityMonitor } from '@/features/activity-monitor/ActivityMonitor';
-import { LayoutRenderer } from '@/features/layout/LayoutRenderer';
-import { PageTabs } from '@/features/layout/PageTabs';
+import { SurfaceLayout } from '@/features/surface/SurfaceLayout';
 import { ControlOverridePanel } from '@/features/layout/ControlOverridePanel';
 import { PresetBrowser } from '@/features/layout/PresetBrowser';
 import {
@@ -45,7 +44,6 @@ export function App() {
   const learnMode = useLearnStore((s) => s.learnMode);
   const toggleLearnMode = useLearnStore((s) => s.toggleLearnMode);
   const layout = useLayoutStore((s) => s.layout);
-  const activePageIndex = useLayoutStore((s) => s.activePageIndex);
   const editMode = useLayoutStore((s) => s.editMode);
   const toggleEditMode = useLayoutStore((s) => s.toggleEditMode);
   const saveLayout = useLayoutStore((s) => s.saveLayout);
@@ -53,8 +51,6 @@ export function App() {
   const discardChanges = useLayoutStore((s) => s.discardChanges);
   const overridePanelModuleId = useLayoutStore((s) => s.overridePanelModuleId);
   const closeOverridePanel = useLayoutStore((s) => s.closeOverridePanel);
-
-  const activePage = layout?.pages[activePageIndex];
 
   // Boot MIDI engine + stores once.
   useEffect(() => {
@@ -88,9 +84,9 @@ export function App() {
   }, []);
 
   // Apply persisted theme on mount and any time it changes.
-  // 'landr' lives on :root, so no data-theme attribute is needed for it.
+  // 'studio-dark' is :root default — no attribute needed. Light is opt-in.
   useEffect(() => {
-    if (theme === 'landr') document.documentElement.removeAttribute('data-theme');
+    if (theme === 'studio-dark') document.documentElement.removeAttribute('data-theme');
     else document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
@@ -99,6 +95,12 @@ export function App() {
     if (perfMode) document.documentElement.setAttribute('data-perf-mode', '');
     else document.documentElement.removeAttribute('data-perf-mode');
   }, [perfMode]);
+
+  // Sync edit mode to a data attribute so CSS can reveal module boundaries.
+  useEffect(() => {
+    if (editMode) document.documentElement.setAttribute('data-edit-mode', '');
+    else document.documentElement.removeAttribute('data-edit-mode');
+  }, [editMode]);
 
   useAppHotkeys();
 
@@ -136,11 +138,6 @@ export function App() {
         {/* Left: title only — port status moved into <MidiStatus /> */}
         <div className="flex shrink-0 items-center gap-2.5">
           <h1 className="font-mono text-[12px] font-semibold tracking-[0.22em] text-text/90">MIDI SURFACE</h1>
-        </div>
-
-        {/* Center: page tabs */}
-        <div className="flex flex-1 justify-center">
-          <PageTabs />
         </div>
 
         {/* Right: live MIDI status + action buttons */}
@@ -258,13 +255,7 @@ export function App() {
       {/* Main area */}
       <div className="flex flex-1 gap-3 overflow-hidden p-3">
         <div className="min-h-0 flex-1 overflow-auto">
-          {activePage ? (
-            <LayoutRenderer pageId={activePage.id} />
-          ) : (
-            <div className="flex h-full items-center justify-center font-mono text-xs text-muted">
-              Loading…
-            </div>
-          )}
+          <SurfaceLayout />
         </div>
 
         {(pane !== 'none' || overridePanelModuleId) && (

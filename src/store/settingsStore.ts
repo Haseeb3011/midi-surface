@@ -11,8 +11,8 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import type { MidiChannel } from '@/features/midi-engine/types';
 import { debouncedLocalStorage } from '@/persistence/debouncedStorage';
 
-export type ThemeName = 'landr' | 'vital' | 'cyber' | 'sunset' | 'mono';
-export const THEME_NAMES: ThemeName[] = ['landr', 'vital', 'cyber', 'sunset', 'mono'];
+export type ThemeName = 'studio-dark' | 'studio-light';
+export const THEME_NAMES: ThemeName[] = ['studio-dark', 'studio-light'];
 
 interface SettingsState {
   /** Persisted output port id; `MidiEngine` is wired up from this on boot. */
@@ -56,7 +56,7 @@ export const useSettingsStore = create<SettingsState>()(
       velocity: 100,
       panicOnBlur: true,
       activityVisible: false,
-      theme: 'landr' as ThemeName,
+      theme: 'studio-dark' as ThemeName,
       pianoOctaves: 3,
       pianoHeight: 200,
       perfMode: false,
@@ -75,14 +75,14 @@ export const useSettingsStore = create<SettingsState>()(
     }),
     {
       name: 'midi-surface-settings',
-      version: 4,
+      version: 5,
       storage: createJSONStorage(() => debouncedLocalStorage(300)),
       migrate: (persisted, version) => {
         const s = (persisted ?? {}) as Partial<SettingsState>;
-        if (version < 3) {
-          // Legacy 'default' theme maps to the new LANDR default.
-          const legacyTheme = (s.theme as string | undefined) ?? 'landr';
-          s.theme = (legacyTheme === 'default' ? 'landr' : legacyTheme) as ThemeName;
+        if (version < 5) {
+          // All old theme names (landr, vital, cyber, sunset, mono, default) → studio-dark.
+          const known: ThemeName[] = ['studio-dark', 'studio-light'];
+          if (!known.includes(s.theme as ThemeName)) s.theme = 'studio-dark';
         }
         s.perfMode ??= false;
         return s as SettingsState;

@@ -12,13 +12,16 @@ import { useLayoutStore } from '@/store/layoutStore';
 import type { ModuleInstance, ModuleType } from './types';
 
 const MIN_COLSPAN: Record<ModuleType, 1 | 2 | 3 | 4> = {
-  transport: 2,
-  knobs:     2,
-  faders:    2,
-  pads:      1,
-  wheels:    1,
-  keyboard:  2,
-  activity:  1,
+  encoders:      2,
+  display:       1,
+  'transport-bar': 2,
+  'mode-buttons':  1,
+  pads:          1,
+  wheels:        1,
+  nav:           1,
+  keyboard:      2,
+  faders:        2,
+  activity:      1,
 };
 
 function snapColSpan(raw: number, type: ModuleType): 1 | 2 | 3 | 4 {
